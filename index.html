@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V27.1">
+  <meta name="dashboard-version" content="V27.2">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1576,6 +1576,35 @@
     }
     .report-edit-btn:hover{background:rgba(255,255,255,.16)}
 
+
+    /* V27.2 - FILTROS DE MATRIZ EN UNA SOLA FILA */
+    .matrix-toolbar{
+      display:grid !important;
+      grid-template-columns:minmax(120px,.85fr) minmax(135px,.95fr) minmax(135px,.95fr) minmax(150px,1.05fr) minmax(220px,1.45fr) minmax(150px,1fr) auto !important;
+      gap:10px !important;
+      align-items:end !important;
+      padding:12px 14px !important;
+    }
+    .matrix-toolbar label{min-width:0 !important}
+    .matrix-toolbar select,.matrix-toolbar input{width:100% !important;min-width:0 !important}
+    .matrix-clear{align-self:end !important;justify-self:stretch !important;white-space:nowrap;min-width:130px}
+    @media(max-width:1250px){
+      .matrix-toolbar{
+        grid-template-columns:minmax(110px,.8fr) minmax(120px,.9fr) minmax(120px,.9fr) minmax(135px,1fr) minmax(190px,1.35fr) minmax(135px,.95fr) auto !important;
+        gap:8px !important;
+      }
+      .matrix-toolbar label{font-size:10px !important}
+      .matrix-toolbar select,.matrix-toolbar input,.matrix-clear{height:36px !important;font-size:10px !important}
+    }
+    @media(max-width:980px){
+      .matrix-toolbar{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+      .matrix-clear{justify-self:start !important;width:auto !important}
+    }
+    @media(max-width:620px){
+      .matrix-toolbar{grid-template-columns:1fr !important}
+      .matrix-clear{width:100% !important}
+    }
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1827,7 +1856,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V27.1 cargado");
+console.info("Dashboard GADMR - V27.2 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
