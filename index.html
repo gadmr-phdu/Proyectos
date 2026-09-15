@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V28">
+  <meta name="dashboard-version" content="V28.1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1626,6 +1626,13 @@
     @media(max-width:900px){.custom-fields-form-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:620px){.custom-fields-form-grid{grid-template-columns:1fr}}
 
+
+    /* V28.1 - estado seguro de módulos opcionales */
+    #addCustomFieldBtn:disabled{
+      opacity:.48;
+      cursor:not-allowed;
+      filter:grayscale(.25);
+    }
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1888,7 +1895,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V28 cargado");
+console.info("Dashboard GADMR - V28.1 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -3339,17 +3346,58 @@ function visibleCustomFields(){return sortedCustomFields(customFields.filter(f=>
 function filterableCustomFields(){return sortedCustomFields(customFields.filter(f=>f.filterable!==false));}
 
 async function loadCustomFieldsAndValues(){
- if(!dbReady) return;
- const [fr,vr]=await Promise.all([
-   dbClient.from("project_custom_fields").select("*").order("display_order",{ascending:true}).order("name",{ascending:true}),
-   dbClient.from("project_custom_values").select("*")
- ]);
- if(fr.error) throw fr.error;
- if(vr.error) throw vr.error;
- customFields=fr.data||[];
- customValues=vr.data||[];
- rebuildCustomValuesMap();
- renderCustomFieldFilterControls();
+ // V28.1: esta función nunca debe impedir la carga del Dashboard principal.
+ if(!dbReady){
+   customFields=[];
+   customValues=[];
+   rebuildCustomValuesMap();
+   renderCustomFieldFilterControls();
+   return false;
+ }
+
+ try{
+   const [fr,vr]=await Promise.all([
+     dbClient.from("project_custom_fields").select("*").order("display_order",{ascending:true}).order("name",{ascending:true}),
+     dbClient.from("project_custom_values").select("*")
+   ]);
+
+   if(fr.error) throw fr.error;
+   if(vr.error) throw vr.error;
+
+   customFields=fr.data||[];
+   customValues=vr.data||[];
+   rebuildCustomValuesMap();
+   renderCustomFieldFilterControls();
+   window.customFieldsReady=true;
+   window.customFieldsError=null;
+   const btn=document.getElementById("addCustomFieldBtn");
+   if(btn){
+     btn.disabled=false;
+     btn.title="Agregar una nueva columna para todos los proyectos";
+   }
+   const section=document.getElementById("customFieldsFormSection");
+   if(section) section.hidden=false;
+   return true;
+ }catch(err){
+   console.warn("V28.1 · Campos personalizados no disponibles. El Dashboard continuará funcionando.",err);
+   customFields=[];
+   customValues=[];
+   rebuildCustomValuesMap();
+   renderCustomFieldFilterControls();
+   window.customFieldsReady=false;
+   window.customFieldsError=err;
+
+   const btn=document.getElementById("addCustomFieldBtn");
+   if(btn){
+     btn.disabled=true;
+     btn.title="Campos personalizados no disponibles. Ejecuta el SQL V28.1 en Supabase.";
+   }
+
+   const section=document.getElementById("customFieldsFormSection");
+   if(section) section.hidden=true;
+
+   return false;
+ }
 }
 function renderCustomFieldFilterControls(){
  const fs=document.getElementById("matrixCustomFieldFilter"),vs=document.getElementById("matrixCustomValueFilter");
@@ -3387,6 +3435,7 @@ function renderCustomFieldsForm(projectId=null){
  w.innerHTML=sortedCustomFields().map(f=>customInputHtml(f,projectId?getCustomValue(projectId,f.id):"")).join("");
 }
 async function saveCustomValuesForProject(projectId){
+ if(window.customFieldsReady===false || !customFields.length) return;
  const rows=[],empty=[];
  customFields.forEach(f=>{
    const el=document.querySelector(`[data-custom-field-id="${f.id}"]`);if(!el)return;
@@ -3407,6 +3456,10 @@ function updateCustomFieldOptionsVisibility(){
 }
 function openCustomFieldModal(){
  if(!dbReady)return;
+ if(window.customFieldsReady===false){
+   alert("Los campos personalizados todavía no están disponibles en Supabase. Ejecuta el archivo SUPABASE_V28_1_CAMPOS_PERSONALIZADOS.sql y recarga la página. El resto del Dashboard puede seguir utilizándose normalmente.");
+   return;
+ }
  if(!currentSession){requireEditor(openCustomFieldModal);return;}
  document.getElementById("customFieldName").value="";
  document.getElementById("customFieldType").value="select";
@@ -3472,6 +3525,7 @@ async function refreshProjectsFromDatabase(){
  matrixRows=data||[];
  projects=matrixRows.map(dbRowToProject);
 
+ // Los campos adicionales son opcionales: un fallo aquí no detiene proyectos, KPIs, gráficos ni mapa.
  await loadCustomFieldsAndValues();
 
  if(els.parish){
@@ -4561,7 +4615,11 @@ async function syncAuthUI(){
  // El botón Agregar permanece visible para todos; si no hay sesión,
  // solicitará credenciales al hacer clic.
  if(add) add.hidden=false;
- if(addField) addField.hidden=false;
+ if(addField){
+   addField.hidden=false;
+   addField.disabled=window.customFieldsReady===false;
+   if(window.customFieldsReady===false) addField.title="Campos personalizados no disponibles. Ejecuta el SQL V28.1 en Supabase.";
+ }
  if(logout) logout.hidden=!currentSession;
 
  await refreshProjectsFromDatabase();
