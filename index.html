@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V28.6.1">
+  <meta name="dashboard-version" content="V29">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -217,6 +217,8 @@
     body{overflow-x:hidden}
     .admin-sidebar{
       position:fixed;
+      display:flex;
+      flex-direction:column;
       left:0;
       top:0;
       bottom:0;
@@ -1796,6 +1798,122 @@
       background-color:rgba(245,158,11,.10) !important;
     }
 
+
+    /* =========================================================
+       V29 — REORGANIZACIÓN VISUAL, FILTROS MÚLTIPLES Y UNIVERSOS
+       ========================================================= */
+    .sidebar-session-foot{
+      margin-top:auto;
+      display:flex !important;
+      flex-direction:column;
+      gap:10px;
+      padding:10px;
+    }
+    .sidebar-logout-btn{
+      width:100%;
+      min-height:40px;
+      border:1px solid rgba(255,255,255,.28);
+      border-radius:8px;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      font:700 11px Arial,sans-serif;
+      cursor:pointer;
+    }
+    .sidebar-logout-btn:hover{background:rgba(255,255,255,.15)}
+    .sidebar-logout-icon{font-size:20px;line-height:1;transform:rotate(180deg)}
+    .sidebar-institution{font-size:9px;line-height:1.35;color:rgba(255,255,255,.65);text-align:center}
+    body.sidebar-collapsed .sidebar-session-foot{
+      display:flex !important;
+      padding:8px;
+    }
+    body.sidebar-collapsed .sidebar-institution{display:none}
+    body.sidebar-collapsed .sidebar-logout-btn{
+      width:42px;
+      height:42px;
+      min-height:42px;
+      padding:0;
+      border-radius:8px;
+    }
+    body.sidebar-collapsed .sidebar-logout-btn .side-text{display:none}
+    body.sidebar-collapsed .sidebar-logout-icon{font-size:22px}
+
+    .matrix-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    #dbConnectionBadge,#matrixLogoutBtn{display:none !important}
+
+    .matrix-toolbar-v29{
+      display:grid !important;
+      grid-template-columns:minmax(240px,1.45fr) minmax(180px,1fr) minmax(190px,1.05fr) minmax(170px,.9fr) auto !important;
+      gap:10px !important;
+      overflow:visible !important;
+      align-items:end !important;
+    }
+    .multi-filter{position:relative;min-width:0}
+    .multi-filter-label{display:block;margin-bottom:5px;font-size:10px;font-weight:700;color:#203858}
+    .multi-filter-btn{
+      width:100%;height:38px;border:1px solid #cbd6e5;border-radius:6px;background:#fff;color:#203858;
+      padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+      font:700 10px Arial,sans-serif;cursor:pointer;text-align:left
+    }
+    .multi-filter-btn:disabled{background:#f4f6f9;color:#98a2b3;cursor:not-allowed}
+    .multi-count{
+      min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#123e78;color:#fff;
+      display:inline-flex;align-items:center;justify-content:center;font-size:9px
+    }
+    .multi-filter-popover{
+      position:absolute;z-index:90;top:calc(100% + 5px);left:0;width:max-content;min-width:230px;max-width:360px;
+      max-height:360px;overflow:auto;background:#fff;border:1px solid #d7e0eb;border-radius:8px;
+      box-shadow:0 12px 28px rgba(16,39,75,.18);padding:8px
+    }
+    .multi-option{display:flex!important;align-items:center!important;gap:8px!important;padding:7px 8px!important;margin:0!important;border-radius:5px;font-size:10px!important;font-weight:600!important;cursor:pointer}
+    .multi-option:hover{background:#f2f6fb}
+    .multi-option input{width:14px!important;height:14px!important;min-width:14px!important;margin:0!important;accent-color:#123e78}
+    .multi-value-group{padding:5px 0 8px;border-bottom:1px solid #edf1f6}
+    .multi-value-group:last-child{border-bottom:0}
+    .multi-value-group>strong{display:block;padding:4px 8px;color:#123e78;font-size:10px;text-transform:uppercase}
+    .multi-empty{padding:12px;color:#667085;font-size:10px}
+    .legacy-matrix-filters{display:none!important}
+
+    .universe-dashboard{display:grid;gap:18px;margin-bottom:20px}
+    .universe-block{
+      background:#fff;border:1px solid #dce4ee;border-radius:12px;padding:14px 16px 16px;
+      box-shadow:0 4px 12px rgba(16,39,75,.04)
+    }
+    .universe-pac{border-top:4px solid var(--blue)}
+    .universe-out{border-top:4px solid var(--red)}
+    .universe-heading{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .universe-heading h2{margin:0;color:var(--navy);font-size:14px}
+    .universe-number{font-size:9px;font-weight:800;letter-spacing:.6px;padding:4px 7px;border-radius:4px;background:#edf3fb;color:#123e78}
+    .universe-grid{display:grid;grid-template-columns:.8fr 1.7fr .9fr;gap:14px}
+    .universe-grid .kpi-card{margin:0;min-height:190px;padding:18px 14px}
+    .universe-grid .kpi-card strong{font-size:42px;margin:10px 0 6px}
+    .universe-direction-card:before{background:#6b7f9d}
+    .direction-breakdown{width:100%;display:grid;gap:8px;margin-top:10px;max-height:145px;overflow:auto;padding-right:3px}
+    .direction-item{display:grid;gap:3px}
+    .direction-row,.direction-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .direction-row strong{font-size:9px!important;margin:0!important;color:#203858!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .direction-row span{font-size:9px;font-weight:800;color:#123e78}
+    .direction-bar{height:5px;background:#edf1f6;border-radius:4px;overflow:hidden}
+    .direction-bar i{display:block;height:100%;background:#2468c9;border-radius:4px}
+    .universe-out .direction-bar i{background:#d64a4f}
+    .direction-meta{font-size:8.5px;color:#667085}
+    .direction-meta b{color:#203858}
+    .direction-empty{font-size:10px;color:#667085;padding:18px 8px;text-align:center}
+
+    @media(max-width:1150px){
+      .matrix-toolbar-v29{grid-template-columns:1.2fr 1fr 1fr 1fr auto!important}
+      .universe-grid{grid-template-columns:1fr 1.4fr}
+      .universe-delivered-card{grid-column:1/-1}
+    }
+    @media(max-width:760px){
+      .matrix-toolbar-v29{grid-template-columns:1fr!important}
+      .universe-grid{grid-template-columns:1fr}
+      .universe-delivered-card{grid-column:auto}
+    }
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1813,7 +1931,13 @@
         <span class="side-icon">▦</span><span class="side-text">Matriz de Proyectos</span>
       </button>
     </nav>
-    <div class="sidebar-foot">GADM Riobamba · Jefatura de Diseño de la Obra Pública</div>
+    <div class="sidebar-foot sidebar-session-foot">
+      <button id="sidebarLogoutBtn" class="sidebar-logout-btn" type="button" hidden title="Cerrar sesión">
+        <span class="sidebar-logout-icon">⇥</span>
+        <span class="side-text">Cerrar sesión</span>
+      </button>
+      <div class="sidebar-institution">GADM Riobamba · Jefatura de Diseño de la Obra Pública</div>
+    </div>
   </aside>
 
 <div class="app-shell">
@@ -1849,23 +1973,52 @@
       <div id="dashboardFilterSummary" class="dashboard-filter-summary">Mostrando información de todas las parroquias</div>
     </section>
 
-    <section class="kpi-grid">
-      <article class="kpi-card kpi-total">
-        <span class="kpi-label">TOTAL DE PROYECTOS</span><strong id="kpiTotal">—</strong>
-        <div class="kpi-money" id="moneyTotal">—</div><div class="kpi-separator"></div><small>100% del total de proyectos</small>
-      </article>
-      <article class="kpi-card kpi-pac">
-        <span class="kpi-label">PROYECTOS PAC</span><strong id="kpiPac">—</strong>
-        <div class="kpi-money" id="moneyPac">—</div><div class="kpi-separator"></div><small id="pctPac">—</small>
-      </article>
-      <article class="kpi-card kpi-otros">
-        <span class="kpi-label">FUERA DEL PAC</span><strong id="kpiOtros">—</strong>
-        <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div><small id="pctOtros">—</small>
-      </article>
-      <article class="kpi-card kpi-oopp">
-        <span class="kpi-label">ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiOopp">—</strong>
-        <div class="kpi-money" id="moneyOopp">—</div><div class="kpi-separator"></div><small id="pctOopp">—</small>
-      </article>
+    <section class="universe-dashboard">
+      <div class="universe-block universe-pac">
+        <div class="universe-heading">
+          <span class="universe-number">UNIVERSO 1</span>
+          <h2>PROYECTOS PAC</h2>
+        </div>
+        <div class="universe-grid">
+          <article class="kpi-card kpi-pac universe-summary-card">
+            <span class="kpi-label">TOTAL PROYECTOS PAC</span><strong id="kpiPac">—</strong>
+            <div class="kpi-money" id="moneyPac">—</div><div class="kpi-separator"></div>
+            <small id="pctPac">Universo PAC</small>
+          </article>
+          <article class="kpi-card universe-direction-card">
+            <span class="kpi-label">INVERSIÓN PAC POR DIRECCIÓN</span>
+            <div id="pacDirectionBreakdown" class="direction-breakdown"></div>
+          </article>
+          <article class="kpi-card kpi-oopp universe-delivered-card">
+            <span class="kpi-label">PAC ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiPacDelivered">—</strong>
+            <div class="kpi-money" id="moneyPacDelivered">—</div><div class="kpi-separator"></div>
+            <small id="pctPacDelivered">—</small>
+          </article>
+        </div>
+      </div>
+
+      <div class="universe-block universe-out">
+        <div class="universe-heading">
+          <span class="universe-number">UNIVERSO 2</span>
+          <h2>FUERA DEL PAC</h2>
+        </div>
+        <div class="universe-grid">
+          <article class="kpi-card kpi-otros universe-summary-card">
+            <span class="kpi-label">TOTAL FUERA DEL PAC</span><strong id="kpiOtros">—</strong>
+            <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div>
+            <small id="pctOtros">Universo Fuera del PAC</small>
+          </article>
+          <article class="kpi-card universe-direction-card">
+            <span class="kpi-label">INVERSIÓN FUERA DEL PAC POR DIRECCIÓN</span>
+            <div id="outsideDirectionBreakdown" class="direction-breakdown"></div>
+          </article>
+          <article class="kpi-card kpi-oopp universe-delivered-card">
+            <span class="kpi-label">FUERA DEL PAC ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiOutsideDelivered">—</strong>
+            <div class="kpi-money" id="moneyOutsideDelivered">—</div><div class="kpi-separator"></div>
+            <small id="pctOutsideDelivered">—</small>
+          </article>
+        </div>
+      </div>
     </section>
 
     <section class="charts-top charts-three">
@@ -1927,10 +2080,10 @@
       </div>
       <div class="matrix-actions">
         <button id="downloadMatrixXlsx" class="matrix-btn" type="button">⇩ Descargar Matriz (.xlsx)</button>
-        <span id="dbConnectionBadge" class="connection-badge">Base no configurada</span>
-        <button id="matrixLogoutBtn" class="matrix-btn" type="button" hidden>Cerrar sesión</button>
         <button id="addCustomFieldBtn" class="matrix-btn" type="button" hidden>+ Agregar campo</button>
         <button id="addProjectBtn" class="matrix-btn primary" type="button" hidden>+ Agregar proyecto</button>
+        <span id="dbConnectionBadge" class="connection-badge" hidden>Base no configurada</span>
+        <button id="matrixLogoutBtn" class="matrix-btn" type="button" hidden>Cerrar sesión</button>
       </div>
     </div>
 
@@ -1955,46 +2108,23 @@
     </div>
 
     <div id="matrixDataPanel" class="matrix-card" hidden>
-      <div class="matrix-toolbar">
-        <label>Categoría
-          <select id="matrixCategoryFilter">
-            <option value="">Todas</option>
-            <option value="PAC">PAC</option>
-            <option value="Fuera del PAC">Fuera del PAC</option>
-          </select>
-        </label>
-        <label>Parroquia
-          <select id="matrixParishFilter"><option value="">Todas</option></select>
-        </label>
-        <label>Estado
-          <select id="matrixStatusFilter">
-            <option value="">Todos</option>
-            <option value="En desarrollo">En desarrollo</option>
-            <option value="Entregado para Contratación">Entregado para Contratación</option>
-            <option value="Remitido a otra dirección">Remitido a otra dirección</option>
-            <option value="No iniciado">No iniciado</option>
-          </select>
-        </label>
-        <label>Coordenadas
-          <select id="matrixCoordinatesFilter">
-            <option value="">Todos</option>
-            <option value="with">Con coordenadas</option>
-            <option value="without">Sin coordenadas</option>
-          </select>
-        </label>
-        <label>Buscar
+      <div class="matrix-toolbar matrix-toolbar-v29">
+        <label class="matrix-search-field">Buscar
           <input id="matrixSearch" type="search" placeholder="Buscar proyecto o parroquia…">
         </label>
-        <label>Campo adicional
-          <select id="matrixCustomFieldFilter">
-            <option value="">Ninguno</option>
-          </select>
-        </label>
-        <label>Valor adicional
-          <select id="matrixCustomValueFilter" disabled>
-            <option value="">Todos</option>
-          </select>
-        </label>
+
+        <div class="multi-filter">
+          <span class="multi-filter-label">Campo</span>
+          <button id="matrixFieldPickerBtn" class="multi-filter-btn" type="button">Seleccionar campos <span id="matrixFieldCount" class="multi-count">0</span></button>
+          <div id="matrixFieldPicker" class="multi-filter-popover" hidden></div>
+        </div>
+
+        <div class="multi-filter">
+          <span class="multi-filter-label">Valor</span>
+          <button id="matrixValuePickerBtn" class="multi-filter-btn" type="button" disabled>Seleccionar valores <span id="matrixValueCount" class="multi-count">0</span></button>
+          <div id="matrixValuePicker" class="multi-filter-popover multi-filter-values" hidden></div>
+        </div>
+
         <label>Ordenar
           <select id="matrixSort">
             <option value="item-asc">N° de proyecto</option>
@@ -2005,6 +2135,15 @@
           </select>
         </label>
         <button id="matrixClearBtn" class="matrix-btn matrix-clear" type="button">↻ Limpiar filtros</button>
+
+        <div class="legacy-matrix-filters" hidden>
+          <select id="matrixCategoryFilter"><option value=""></option></select>
+          <select id="matrixParishFilter"><option value=""></option></select>
+          <select id="matrixStatusFilter"><option value=""></option></select>
+          <select id="matrixCoordinatesFilter"><option value=""></option></select>
+          <select id="matrixCustomFieldFilter"><option value=""></option></select>
+          <select id="matrixCustomValueFilter"><option value=""></option></select>
+        </div>
       </div>
       <div class="matrix-scroll">
         <table class="matrix-table">
@@ -2058,7 +2197,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V28.6.1 cargado");
+console.info("Dashboard GADMR - V29 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -2087,14 +2226,16 @@ let customFields=[];
 let customValues=[];
 let customValuesMap=new Map();
 let editingCustomFieldId=null;
+let matrixSelectedFields=new Set();
+let matrixSelectedValues=new Map();
 let googleMapsLoadPromise=null;
 let streetViewPanoramaInstance=null;
 
 
 const els={
- total:$("#kpiTotal"),pac:$("#kpiPac"),otros:$("#kpiOtros"),oopp:$("#kpiOopp"),
- moneyTotal:$("#moneyTotal"),moneyPac:$("#moneyPac"),moneyOtros:$("#moneyOtros"),moneyOopp:$("#moneyOopp"),
- pctPac:$("#pctPac"),pctOtros:$("#pctOtros"),pctOopp:$("#pctOopp"),
+ pac:$("#kpiPac"),otros:$("#kpiOtros"),
+ moneyPac:$("#moneyPac"),moneyOtros:$("#moneyOtros"),
+ pctPac:$("#pctPac"),pctOtros:$("#pctOtros"),
  body:$("#projectsBody"),category:$("#categoryFilter"),parish:$("#parishFilter"),status:$("#statusFilter"),
  search:$("#search"),clear:$("#clearFilters"),pageSize:$("#pageSize"),pagination:$("#pagination"),range:$("#rangeLabel"),
  modal:$("#modal"),modalContent:$("#modalContent"),modalClose:$("#modalClose"),
@@ -2398,30 +2539,76 @@ function displayCategory(v){return v || "—";}
 function unique(field){return [...new Set(projects.map(p=>p[field]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));}
 function fillSelect(el,vals){vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o);});}
 
+function pacDirectionField(){
+ return customFields.find(f=>String(f.name||"").trim().toUpperCase()==="PAC DE LA DIRECCIÓN")
+   || customFields.find(f=>String(f.field_key||"")==="pac_de_la_direccion")
+   || null;
+}
+
+function renderDirectionBreakdown(containerId,rows){
+ const wrap=document.getElementById(containerId);
+ if(!wrap)return;
+ const field=pacDirectionField();
+ const totalMoney=rows.reduce((s,p)=>s+amount(p),0);
+
+ if(!field){
+   wrap.innerHTML='<div class="direction-empty">Crea o habilita el campo “PAC de la Dirección” para visualizar esta distribución.</div>';
+   return;
+ }
+
+ const groups=new Map();
+ rows.forEach(p=>{
+   const label=String(getCustomValue(p.id,field.id)||"Sin información").trim()||"Sin información";
+   if(!groups.has(label))groups.set(label,{count:0,money:0});
+   const g=groups.get(label);g.count++;g.money+=amount(p);
+ });
+
+ const items=[...groups.entries()].sort((a,b)=>b[1].money-a[1].money);
+ if(!items.length){
+   wrap.innerHTML='<div class="direction-empty">Sin proyectos en este universo.</div>';
+   return;
+ }
+
+ wrap.innerHTML=items.map(([name,g])=>{
+   const share=totalMoney?g.money/totalMoney*100:0;
+   return `<div class="direction-item">
+     <div class="direction-row"><strong>${esc(name)}</strong><span>${share.toFixed(1)}%</span></div>
+     <div class="direction-bar"><i style="width:${Math.max(0,Math.min(100,share))}%"></i></div>
+     <div class="direction-meta"><span>${g.count} proyecto${g.count===1?"":"s"}</span><b>${moneyValue(g.money)}</b></div>
+   </div>`;
+ }).join("");
+}
+
 function renderKpis(){
  const data=dashboardProjects();
- const total=data.length,
-       pac=data.filter(p=>p.categoria==="PAC"),
-       fuera=data.filter(p=>p.categoria==="Fuera del PAC"),
-       entregados=data.filter(p=>groupedStatus(p)==="Entregado para Contratación");
+ const pac=data.filter(p=>p.categoria==="PAC");
+ const fuera=data.filter(p=>p.categoria==="Fuera del PAC");
+ const pacDelivered=pac.filter(p=>groupedStatus(p)==="Entregado para Contratación");
+ const outsideDelivered=fuera.filter(p=>groupedStatus(p)==="Entregado para Contratación");
 
- els.total.textContent=total;
  els.pac.textContent=pac.length;
  els.otros.textContent=fuera.length;
- els.oopp.textContent=entregados.length;
-
- els.moneyTotal.textContent=moneyValue(data.reduce((s,p)=>s+amount(p),0));
  els.moneyPac.textContent=moneyValue(pac.reduce((s,p)=>s+amount(p),0));
  els.moneyOtros.textContent=moneyValue(fuera.reduce((s,p)=>s+amount(p),0));
- els.moneyOopp.textContent=moneyValue(entregados.reduce((s,p)=>s+amount(p),0));
+ els.pctPac.textContent="100% del universo PAC";
+ els.pctOtros.textContent="100% del universo Fuera del PAC";
 
- els.pctPac.textContent=pct(pac.length,total);
- els.pctOtros.textContent=pct(fuera.length,total);
- els.pctOopp.textContent=pct(entregados.length,total);
+ const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ set("kpiPacDelivered",pacDelivered.length);
+ set("moneyPacDelivered",moneyValue(pacDelivered.reduce((s,p)=>s+amount(p),0)));
+ set("pctPacDelivered",pac.length?`${(pacDelivered.length/pac.length*100).toFixed(1)}% de los proyectos PAC`:"—");
+
+ set("kpiOutsideDelivered",outsideDelivered.length);
+ set("moneyOutsideDelivered",moneyValue(outsideDelivered.reduce((s,p)=>s+amount(p),0)));
+ set("pctOutsideDelivered",fuera.length?`${(outsideDelivered.length/fuera.length*100).toFixed(1)}% de los proyectos Fuera del PAC`:"—");
+
+ renderDirectionBreakdown("pacDirectionBreakdown",pac);
+ renderDirectionBreakdown("outsideDirectionBreakdown",fuera);
 
  const summary=document.getElementById("dashboardFilterSummary");
  if(summary){
    const parish=document.getElementById("dashboardParishFilter")?.value||"";
+   const total=data.length;
    summary.textContent=parish
      ? (normalizedParishName(parish)==="RIOBAMBA"
          ? `Mostrando ${total} proyecto${total===1?"":"s"} de Riobamba y sus parroquias urbanas`
@@ -4397,27 +4584,91 @@ async function deleteMedia(mediaId){
  await loadProjectMedia(record.project_id);
 }
 
+
+function matrixFilterDefinitions(){
+ const base=[
+   {key:"categoria",label:"Categoría",values:()=>["PAC","Fuera del PAC"]},
+   {key:"parroquia",label:"Parroquia",values:()=>[...new Set(matrixRows.map(r=>r.parroquia).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))},
+   {key:"estado",label:"Estado",values:()=>["En desarrollo","Entregado para Contratación","Remitido a otra dirección","No iniciado"]},
+   {key:"coordenadas",label:"Coordenadas",values:()=>["Con coordenadas","Sin coordenadas"]}
+ ];
+ filterableCustomFields().forEach(f=>base.push({
+   key:`custom:${f.id}`,
+   label:f.name,
+   values:()=>f.field_type==="select"?fieldOptions(f):
+     f.field_type==="boolean"?["Sí","No"]:
+     [...new Set(matrixRows.map(r=>getCustomValue(r.id,f.id)).filter(v=>String(v).trim()))].sort((a,b)=>String(a).localeCompare(String(b),"es"))
+ }));
+ return base;
+}
+function renderMatrixFieldPicker(){
+ const wrap=document.getElementById("matrixFieldPicker");if(!wrap)return;
+ const defs=matrixFilterDefinitions();
+ wrap.innerHTML=defs.map(d=>`<label class="multi-option"><input type="checkbox" data-matrix-field="${esc(d.key)}" ${matrixSelectedFields.has(d.key)?"checked":""}><span>${esc(d.label)}</span></label>`).join("");
+ wrap.querySelectorAll("[data-matrix-field]").forEach(cb=>cb.addEventListener("change",()=>{
+   const key=cb.dataset.matrixField;
+   if(cb.checked)matrixSelectedFields.add(key);
+   else{matrixSelectedFields.delete(key);matrixSelectedValues.delete(key);}
+   renderMatrixFieldPicker();renderMatrixValuePicker();updateMatrixFilterButtons();matrixCurrentPage=1;renderMatrix();
+ }));
+}
+function renderMatrixValuePicker(){
+ const wrap=document.getElementById("matrixValuePicker");if(!wrap)return;
+ const defs=matrixFilterDefinitions().filter(d=>matrixSelectedFields.has(d.key));
+ if(!defs.length){
+   wrap.innerHTML='<div class="multi-empty">Selecciona primero uno o más campos.</div>';
+   return;
+ }
+ wrap.innerHTML=defs.map(d=>{
+   const selected=matrixSelectedValues.get(d.key)||new Set();
+   const values=d.values();
+   return `<div class="multi-value-group"><strong>${esc(d.label)}</strong>${values.map(v=>`<label class="multi-option"><input type="checkbox" data-matrix-value-field="${esc(d.key)}" data-matrix-value="${esc(v)}" ${selected.has(String(v))?"checked":""}><span>${esc(v)}</span></label>`).join("")}</div>`;
+ }).join("");
+ wrap.querySelectorAll("[data-matrix-value-field]").forEach(cb=>cb.addEventListener("change",()=>{
+   const key=cb.dataset.matrixValueField,val=cb.dataset.matrixValue;
+   if(!matrixSelectedValues.has(key))matrixSelectedValues.set(key,new Set());
+   const set=matrixSelectedValues.get(key);
+   if(cb.checked)set.add(val);else set.delete(val);
+   if(!set.size)matrixSelectedValues.delete(key);
+   updateMatrixFilterButtons();matrixCurrentPage=1;renderMatrix();
+ }));
+}
+function updateMatrixFilterButtons(){
+ const fc=document.getElementById("matrixFieldCount"),vc=document.getElementById("matrixValueCount"),vb=document.getElementById("matrixValuePickerBtn");
+ if(fc)fc.textContent=matrixSelectedFields.size;
+ const valueCount=[...matrixSelectedValues.values()].reduce((s,set)=>s+set.size,0);
+ if(vc)vc.textContent=valueCount;
+ if(vb)vb.disabled=!matrixSelectedFields.size;
+}
+function matrixRowMatchesMultiFilters(r){
+ if(!matrixSelectedFields.size)return true;
+ for(const key of matrixSelectedFields){
+   const selected=matrixSelectedValues.get(key);
+   if(!selected||!selected.size)continue; // field selected but no value = no restriction yet
+   let value="";
+   if(key==="categoria")value=r.categoria||"";
+   else if(key==="parroquia")value=r.parroquia||"";
+   else if(key==="estado")value=r.estado_dashboard||"";
+   else if(key==="coordenadas")value=projectLocations(dbRowToProject(r)).length?"Con coordenadas":"Sin coordenadas";
+   else if(key.startsWith("custom:"))value=String(getCustomValue(r.id,key.split(":")[1])||"");
+   if(!selected.has(String(value)))return false;
+ }
+ return true;
+}
+function closeMatrixFilterPopovers(except=null){
+ ["matrixFieldPicker","matrixValuePicker"].forEach(id=>{
+   if(id!==except){const el=document.getElementById(id);if(el)el.hidden=true;}
+ });
+}
+
 function matrixFilteredRows(){
  const q=(document.getElementById("matrixSearch")?.value||"").trim().toLowerCase();
- const cat=document.getElementById("matrixCategoryFilter")?.value||"";
- const parish=document.getElementById("matrixParishFilter")?.value||"";
- const status=document.getElementById("matrixStatusFilter")?.value||"";
- const coordinates=document.getElementById("matrixCoordinatesFilter")?.value||"";
- const customFieldId=document.getElementById("matrixCustomFieldFilter")?.value||"";
- const customValue=document.getElementById("matrixCustomValueFilter")?.value||"";
  const sort=document.getElementById("matrixSort")?.value||"item-asc";
 
  const rows=matrixRows.filter(r=>{
    const hay=[r.proyecto,r.parroquia,r.estado_original,r.responsables,r.tramite]
      .join(" ").toLowerCase();
-   return (!q||hay.includes(q))
-     && (!cat||r.categoria===cat)
-     && (!parish||r.parroquia===parish)
-     && (!status||r.estado_dashboard===status)
-     && (!coordinates
-       || (coordinates==="with" && projectLocations(dbRowToProject(r)).length>0)
-       || (coordinates==="without" && projectLocations(dbRowToProject(r)).length===0))
-     && (!customFieldId || !customValue || String(getCustomValue(r.id,customFieldId))===String(customValue));
+   return (!q||hay.includes(q)) && matrixRowMatchesMultiFilters(r);
  });
 
  rows.sort((a,b)=>{
@@ -4825,6 +5076,7 @@ async function syncAuthUI(){
  const add=document.getElementById("addProjectBtn");
  const addField=document.getElementById("addCustomFieldBtn");
  const logout=document.getElementById("matrixLogoutBtn");
+ const sidebarLogout=document.getElementById("sidebarLogoutBtn");
 
  // La matriz es pública: siempre se muestra cuando Supabase está conectado.
  if(!dbReady){
@@ -4833,6 +5085,7 @@ async function syncAuthUI(){
    if(add) add.hidden=true;
    if(addField) addField.hidden=true;
    if(logout) logout.hidden=true;
+   if(sidebarLogout) sidebarLogout.hidden=true;
    return;
  }
 
@@ -4850,7 +5103,8 @@ async function syncAuthUI(){
    addField.disabled=false;
    if(window.customFieldsReady===false) addField.title="Reintentar conexión con campos personalizados";
  }
- if(logout) logout.hidden=!currentSession;
+ if(logout) logout.hidden=true;
+ if(sidebarLogout) sidebarLogout.hidden=!currentSession;
 
  await refreshProjectsFromDatabase();
  renderMatrix();
@@ -4937,30 +5191,41 @@ function bindAdminUI(){
    if(e.key==="Enter") matrixLogin();
  });
  document.getElementById("matrixLogoutBtn")?.addEventListener("click",matrixLogout);
+ document.getElementById("sidebarLogoutBtn")?.addEventListener("click",matrixLogout);
  document.getElementById("addCustomFieldBtn")?.addEventListener("click",openCustomFieldModal);
  document.getElementById("addProjectBtn")?.addEventListener("click",()=>openCrud());
  document.getElementById("matrixRefreshBtn")?.addEventListener("click",async()=>{
    await refreshProjectsFromDatabase();
    renderMatrix();
  });
+ document.getElementById("matrixFieldPickerBtn")?.addEventListener("click",e=>{
+   e.stopPropagation();
+   const p=document.getElementById("matrixFieldPicker");
+   const willOpen=p.hidden;
+   closeMatrixFilterPopovers();
+   p.hidden=!willOpen;
+   if(willOpen)renderMatrixFieldPicker();
+ });
+ document.getElementById("matrixValuePickerBtn")?.addEventListener("click",e=>{
+   e.stopPropagation();
+   const p=document.getElementById("matrixValuePicker");
+   const willOpen=p.hidden;
+   closeMatrixFilterPopovers();
+   p.hidden=!willOpen;
+   if(willOpen)renderMatrixValuePicker();
+ });
+ document.addEventListener("click",e=>{
+   if(!e.target.closest(".multi-filter"))closeMatrixFilterPopovers();
+ });
  document.getElementById("matrixSearch")?.addEventListener("input",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixCategoryFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixParishFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixStatusFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixCoordinatesFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixCustomFieldFilter")?.addEventListener("change",()=>{updateCustomValueFilterOptions();matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixCustomValueFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixSort")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixClearBtn")?.addEventListener("click",()=>{
    document.getElementById("matrixSearch").value="";
-   document.getElementById("matrixCategoryFilter").value="";
-   document.getElementById("matrixParishFilter").value="";
-   document.getElementById("matrixStatusFilter").value="";
-   document.getElementById("matrixCoordinatesFilter").value="";
-   document.getElementById("matrixCustomFieldFilter").value="";
-   document.getElementById("matrixCustomValueFilter").innerHTML='<option value="">Todos</option>';
-   document.getElementById("matrixCustomValueFilter").disabled=true;
+   matrixSelectedFields.clear();
+   matrixSelectedValues.clear();
    document.getElementById("matrixSort").value="item-asc";
+   closeMatrixFilterPopovers();
+   updateMatrixFilterButtons();
    matrixCurrentPage=1;
    renderMatrix();
  });
