@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V29.2">
+  <meta name="dashboard-version" content="V29.3">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -2022,6 +2022,50 @@
       }
     }
 
+
+    /* V29.3 — Encabezados de universos más compactos */
+    .universe-dashboard-v291 .universe-heading{
+      min-height:38px !important;
+      height:38px !important;
+      margin:0 -14px 10px !important;
+      padding:0 14px !important;
+      border-radius:30px 30px 0 0 !important;
+    }
+
+    .universe-dashboard-v291 .universe-heading h2,
+    .universe-dashboard-v291 .universe-out .universe-heading h2{
+      font-size:16px !important;
+      line-height:1 !important;
+      letter-spacing:.5px !important;
+      font-weight:800 !important;
+    }
+
+    .universe-dashboard-v291 .universe-heading::after{
+      left:18% !important;
+      right:18% !important;
+      height:2px !important;
+    }
+
+    /* Reduce ligeramente el peso visual del fondo sin perder identidad */
+    .universe-dashboard-v291 .universe-pac .universe-heading{
+      background:linear-gradient(135deg,#173f6e 0%,#24779a 100%) !important;
+    }
+
+    .universe-dashboard-v291 .universe-out .universe-heading{
+      background:linear-gradient(135deg,#b52a31 0%,#e2474d 100%) !important;
+    }
+
+    @media(max-width:520px){
+      .universe-dashboard-v291 .universe-heading{
+        min-height:36px !important;
+        height:36px !important;
+      }
+      .universe-dashboard-v291 .universe-heading h2,
+      .universe-dashboard-v291 .universe-out .universe-heading h2{
+        font-size:15px !important;
+      }
+    }
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -2292,7 +2336,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V29.2 cargado");
+console.info("Dashboard GADMR - V29.3 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
