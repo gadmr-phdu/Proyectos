@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V27.2">
+  <meta name="dashboard-version" content="V28">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1605,6 +1605,27 @@
       .matrix-clear{width:100% !important}
     }
 
+
+    /* V28 - campos personalizados */
+    .custom-fields-form-section{border-top:1px solid #e1e7ef;margin-top:6px;padding-top:16px}
+    .custom-fields-form-section h4{margin:0 0 4px;color:#0d2a5b;font-size:13px}
+    .custom-fields-form-section p{margin:0 0 12px;color:#667085;font-size:10px}
+    .custom-fields-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .custom-field-empty{grid-column:1/-1;padding:12px;border:1px dashed #cbd5e1;border-radius:7px;background:#f8fafc;color:#667085;font-size:10px}
+    .custom-check{display:flex;align-items:center;gap:8px;color:#344054;font-size:11px;font-weight:700;min-height:38px}
+    .custom-check input{accent-color:#0d2a5b}
+    .custom-field-existing-list{display:grid;gap:6px;max-height:180px;overflow:auto}
+    .custom-field-existing-item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #e1e7ef;border-radius:7px;background:#f9fbfd;font-size:10px}
+    .custom-field-existing-item strong{color:#203858}.custom-field-existing-item span{color:#667085}
+    .custom-field-cell{min-width:140px;max-width:260px;white-space:pre-line;overflow-wrap:anywhere}
+    .matrix-table{min-width:1750px!important}
+    .matrix-toolbar{
+      grid-template-columns:minmax(110px,.7fr) minmax(120px,.8fr) minmax(120px,.8fr) minmax(130px,.85fr) minmax(180px,1.2fr) minmax(145px,.9fr) minmax(145px,.9fr) minmax(140px,.85fr) auto!important;
+      overflow-x:auto
+    }
+    @media(max-width:900px){.custom-fields-form-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:620px){.custom-fields-form-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1738,6 +1759,7 @@
         <button id="downloadMatrixXlsx" class="matrix-btn" type="button">⇩ Descargar Matriz (.xlsx)</button>
         <span id="dbConnectionBadge" class="connection-badge">Base no configurada</span>
         <button id="matrixLogoutBtn" class="matrix-btn" type="button" hidden>Cerrar sesión</button>
+        <button id="addCustomFieldBtn" class="matrix-btn" type="button" hidden>+ Agregar campo</button>
         <button id="addProjectBtn" class="matrix-btn primary" type="button" hidden>+ Agregar proyecto</button>
       </div>
     </div>
@@ -1793,6 +1815,16 @@
         <label>Buscar
           <input id="matrixSearch" type="search" placeholder="Buscar proyecto o parroquia…">
         </label>
+        <label>Campo adicional
+          <select id="matrixCustomFieldFilter">
+            <option value="">Ninguno</option>
+          </select>
+        </label>
+        <label>Valor adicional
+          <select id="matrixCustomValueFilter" disabled>
+            <option value="">Todos</option>
+          </select>
+        </label>
         <label>Ordenar
           <select id="matrixSort">
             <option value="item-asc">N° de proyecto</option>
@@ -1807,7 +1839,7 @@
       <div class="matrix-scroll">
         <table class="matrix-table">
           <thead>
-            <tr>
+            <tr id="matrixHeaderRow">
               <th>N°</th>
               <th>Proyecto</th>
               <th>Parroquia</th>
@@ -1856,7 +1888,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V27.2 cargado");
+console.info("Dashboard GADMR - V28 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -1881,6 +1913,9 @@ let currentPlatformsGeo=null;
 let parishLabelMarkers=[];
 let platformLabelMarkers=[];
 let currentDashboardParish="";
+let customFields=[];
+let customValues=[];
+let customValuesMap=new Map();
 let googleMapsLoadPromise=null;
 let streetViewPanoramaInstance=null;
 
@@ -3281,6 +3316,135 @@ async function initDatabase(){
  }
 }
 
+
+function slugifyFieldKey(name){
+ return String(name||"campo").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
+   .replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,48)||`campo_${Date.now()}`;
+}
+function customValueKey(projectId,fieldId){return `${projectId}::${fieldId}`;}
+function rebuildCustomValuesMap(){
+ customValuesMap=new Map();
+ customValues.forEach(v=>customValuesMap.set(customValueKey(v.project_id,v.field_id),v.value_text??""));
+}
+function getCustomValue(projectId,fieldId){return customValuesMap.get(customValueKey(projectId,fieldId))??"";}
+function fieldOptions(field){
+ if(Array.isArray(field?.options)) return field.options;
+ if(typeof field?.options==="string"){try{const p=JSON.parse(field.options);return Array.isArray(p)?p:[]}catch(e){return []}}
+ return [];
+}
+function sortedCustomFields(list=customFields){
+ return list.slice().sort((a,b)=>(Number(a.display_order)||100)-(Number(b.display_order)||100)||String(a.name).localeCompare(String(b.name),"es"));
+}
+function visibleCustomFields(){return sortedCustomFields(customFields.filter(f=>f.show_in_matrix!==false));}
+function filterableCustomFields(){return sortedCustomFields(customFields.filter(f=>f.filterable!==false));}
+
+async function loadCustomFieldsAndValues(){
+ if(!dbReady) return;
+ const [fr,vr]=await Promise.all([
+   dbClient.from("project_custom_fields").select("*").order("display_order",{ascending:true}).order("name",{ascending:true}),
+   dbClient.from("project_custom_values").select("*")
+ ]);
+ if(fr.error) throw fr.error;
+ if(vr.error) throw vr.error;
+ customFields=fr.data||[];
+ customValues=vr.data||[];
+ rebuildCustomValuesMap();
+ renderCustomFieldFilterControls();
+}
+function renderCustomFieldFilterControls(){
+ const fs=document.getElementById("matrixCustomFieldFilter"),vs=document.getElementById("matrixCustomValueFilter");
+ if(!fs||!vs)return;
+ const prevF=fs.value,prevV=vs.value;
+ const fields=filterableCustomFields();
+ fs.innerHTML='<option value="">Ninguno</option>'+fields.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+ if(fields.some(f=>String(f.id)===String(prevF))) fs.value=prevF;
+ updateCustomValueFilterOptions(prevV);
+}
+function updateCustomValueFilterOptions(preferred=""){
+ const fs=document.getElementById("matrixCustomFieldFilter"),vs=document.getElementById("matrixCustomValueFilter");
+ if(!fs||!vs)return;
+ const f=customFields.find(x=>String(x.id)===String(fs.value));
+ if(!f){vs.innerHTML='<option value="">Todos</option>';vs.disabled=true;return;}
+ let vals=[];
+ if(f.field_type==="select") vals=fieldOptions(f);
+ else if(f.field_type==="boolean") vals=["Sí","No"];
+ else vals=[...new Set(matrixRows.map(r=>getCustomValue(r.id,f.id)).filter(v=>String(v).trim()))].sort((a,b)=>String(a).localeCompare(String(b),"es"));
+ vs.disabled=false;
+ vs.innerHTML='<option value="">Todos</option>'+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+ if(vals.map(String).includes(String(preferred)))vs.value=preferred;
+}
+function customInputHtml(field,value=""){
+ const id=`customValue_${field.id}`,t=field.field_type||"text";
+ if(t==="select") return `<label class="field-label">${esc(field.name)}<select id="${id}" class="field-control" data-custom-field-id="${field.id}"><option value="">Sin información</option>${fieldOptions(field).map(o=>`<option value="${esc(o)}" ${String(o)===String(value)?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`;
+ if(t==="boolean") return `<label class="field-label">${esc(field.name)}<select id="${id}" class="field-control" data-custom-field-id="${field.id}"><option value="">Sin información</option><option value="Sí" ${value==="Sí"?"selected":""}>Sí</option><option value="No" ${value==="No"?"selected":""}>No</option></select></label>`;
+ if(t==="number") return `<label class="field-label">${esc(field.name)}<input id="${id}" class="field-control" data-custom-field-id="${field.id}" type="number" step="any" value="${esc(value)}"></label>`;
+ if(t==="date") return `<label class="field-label">${esc(field.name)}<input id="${id}" class="field-control" data-custom-field-id="${field.id}" type="date" value="${esc(value)}"></label>`;
+ return `<label class="field-label">${esc(field.name)}<input id="${id}" class="field-control" data-custom-field-id="${field.id}" type="text" value="${esc(value)}"></label>`;
+}
+function renderCustomFieldsForm(projectId=null){
+ const w=document.getElementById("customFieldsFormGrid");if(!w)return;
+ if(!customFields.length){w.innerHTML='<div class="custom-field-empty">Todavía no existen campos adicionales.</div>';return;}
+ w.innerHTML=sortedCustomFields().map(f=>customInputHtml(f,projectId?getCustomValue(projectId,f.id):"")).join("");
+}
+async function saveCustomValuesForProject(projectId){
+ const rows=[],empty=[];
+ customFields.forEach(f=>{
+   const el=document.querySelector(`[data-custom-field-id="${f.id}"]`);if(!el)return;
+   const v=String(el.value??"").trim();
+   if(v==="")empty.push(f.id);else rows.push({project_id:Number(projectId),field_id:Number(f.id),value_text:v});
+ });
+ if(rows.length){const {error}=await dbClient.from("project_custom_values").upsert(rows,{onConflict:"project_id,field_id"});if(error)throw error;}
+ if(empty.length){const {error}=await dbClient.from("project_custom_values").delete().eq("project_id",Number(projectId)).in("field_id",empty);if(error)throw error;}
+}
+function renderCustomFieldsExistingList(){
+ const w=document.getElementById("customFieldExistingList");if(!w)return;
+ if(!customFields.length){w.innerHTML='<div class="custom-field-empty">No existen campos adicionales.</div>';return;}
+ const tn={select:"Lista",text:"Texto",number:"Número",date:"Fecha",boolean:"Sí / No"};
+ w.innerHTML=sortedCustomFields().map(f=>`<div class="custom-field-existing-item"><strong>${esc(f.name)}</strong><span>${esc(tn[f.field_type]||f.field_type)}</span><span>${f.show_in_matrix===false?"Oculto":"Visible"}</span></div>`).join("");
+}
+function updateCustomFieldOptionsVisibility(){
+ const l=document.getElementById("customFieldOptionsLabel");if(l)l.hidden=document.getElementById("customFieldType")?.value!=="select";
+}
+function openCustomFieldModal(){
+ if(!dbReady)return;
+ if(!currentSession){requireEditor(openCustomFieldModal);return;}
+ document.getElementById("customFieldName").value="";
+ document.getElementById("customFieldType").value="select";
+ document.getElementById("customFieldOptions").value="";
+ document.getElementById("customFieldShowMatrix").checked=true;
+ document.getElementById("customFieldFilterable").checked=true;
+ document.getElementById("customFieldOrder").value=customFields.length?Math.max(...customFields.map(f=>Number(f.display_order)||0))+10:100;
+ document.getElementById("customFieldStatus").textContent="";
+ updateCustomFieldOptionsVisibility();renderCustomFieldsExistingList();
+ const m=document.getElementById("customFieldModal");m.classList.add("open");m.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
+}
+function closeCustomFieldModal(){
+ const m=document.getElementById("customFieldModal");m.classList.remove("open");m.setAttribute("aria-hidden","true");document.body.style.overflow="";
+}
+async function createCustomField(){
+ const status=document.getElementById("customFieldStatus"),btn=document.getElementById("customFieldSave");
+ const name=document.getElementById("customFieldName").value.trim(),type=document.getElementById("customFieldType").value;
+ const opts=[...new Set(document.getElementById("customFieldOptions").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+ if(!name){status.textContent="Escribe el nombre del campo.";return;}
+ if(type==="select"&&!opts.length){status.textContent="Agrega al menos una opción.";return;}
+ btn.disabled=true;status.textContent="Creando campo…";
+ try{
+   let key=slugifyFieldKey(name);if(customFields.some(f=>f.field_key===key))key=`${key}_${Date.now().toString().slice(-5)}`;
+   const {error}=await dbClient.from("project_custom_fields").insert({
+     name,field_key:key,field_type:type,options:type==="select"?opts:[],
+     show_in_matrix:document.getElementById("customFieldShowMatrix").checked,
+     filterable:document.getElementById("customFieldFilterable").checked,
+     display_order:Number(document.getElementById("customFieldOrder").value)||100,
+     created_by:currentSession?.user?.id||null
+   });
+   if(error)throw error;
+   await loadCustomFieldsAndValues();renderMatrix();renderCustomFieldsExistingList();
+   status.textContent="Campo creado correctamente.";
+   setTimeout(closeCustomFieldModal,600);
+ }catch(err){console.error(err);status.textContent=`No se pudo crear: ${err.message||err}`;}
+ finally{btn.disabled=false;}
+}
+
 function dbRowToProject(r){
  return {
    ...r,
@@ -3307,6 +3471,8 @@ async function refreshProjectsFromDatabase(){
 
  matrixRows=data||[];
  projects=matrixRows.map(dbRowToProject);
+
+ await loadCustomFieldsAndValues();
 
  if(els.parish){
    const current=els.parish.value;
@@ -3397,6 +3563,7 @@ function openCrud(row=null){
    return;
  }
  setFormFromRow(row);
+ renderCustomFieldsForm(row?.id||null);
  document.getElementById("crudTitle").textContent=row?"Editar proyecto":"Agregar proyecto";
  document.getElementById("crudStatus").textContent="";
 
@@ -3453,6 +3620,7 @@ async function saveProject(evt){
    }
    if(result.error) throw result.error;
 
+   await saveCustomValuesForProject(result.data.id);
    await afterDatabaseChange();
    closeCrud();
  }catch(err){
@@ -3952,6 +4120,8 @@ function matrixFilteredRows(){
  const parish=document.getElementById("matrixParishFilter")?.value||"";
  const status=document.getElementById("matrixStatusFilter")?.value||"";
  const coordinates=document.getElementById("matrixCoordinatesFilter")?.value||"";
+ const customFieldId=document.getElementById("matrixCustomFieldFilter")?.value||"";
+ const customValue=document.getElementById("matrixCustomValueFilter")?.value||"";
  const sort=document.getElementById("matrixSort")?.value||"item-asc";
 
  const rows=matrixRows.filter(r=>{
@@ -3963,7 +4133,8 @@ function matrixFilteredRows(){
      && (!status||r.estado_dashboard===status)
      && (!coordinates
        || (coordinates==="with" && projectLocations(dbRowToProject(r)).length>0)
-       || (coordinates==="without" && projectLocations(dbRowToProject(r)).length===0));
+       || (coordinates==="without" && projectLocations(dbRowToProject(r)).length===0))
+     && (!customFieldId || !customValue || String(getCustomValue(r.id,customFieldId))===String(customValue));
  });
 
  rows.sort((a,b)=>{
@@ -4006,6 +4177,7 @@ async function downloadMatrixXlsx(){
      views:[{state:"frozen",ySplit:1}]
    });
 
+   const exportCustomFields=visibleCustomFields();
    const columns=[
      {header:"item",key:"item",width:7},
      {header:"categoria",key:"categoria",width:14},
@@ -4021,7 +4193,8 @@ async function downloadMatrixXlsx(){
      {header:"Avance",key:"avance",width:12},
      {header:"Coordenadas X",key:"coordenadas_x",width:22},
      {header:"Coordenadas Y",key:"coordenadas_y",width:22},
-     {header:"Área de Intervención",key:"area_intervencion",width:22}
+     {header:"Área de Intervención",key:"area_intervencion",width:22},
+     ...exportCustomFields.map(f=>({header:f.name,key:`custom_${f.id}`,width:24}))
    ];
    ws.columns=columns;
 
@@ -4045,7 +4218,8 @@ async function downloadMatrixXlsx(){
        avance:r.avance==null?null:progressDbValue(r.avance),
        coordenadas_x:r.coordenadas_x||"",
        coordenadas_y:r.coordenadas_y||"",
-       area_intervencion:r.area_intervencion||""
+       area_intervencion:r.area_intervencion||"",
+       ...Object.fromEntries(exportCustomFields.map(f=>[`custom_${f.id}`,getCustomValue(r.id,f.id)||""]))
      });
    });
 
@@ -4112,7 +4286,7 @@ async function downloadMatrixXlsx(){
    // Filtros, tal como una matriz de registro.
    ws.autoFilter={
      from:{row:1,column:1},
-     to:{row:rows.length+1,column:15}
+     to:{row:rows.length+1,column:columns.length}
    };
 
    // Validaciones de los campos normalizados.
@@ -4259,9 +4433,15 @@ async function showFocusedProjectPopup(row,loc){
 
 function renderMatrix(){
  const tbody=document.getElementById("matrixBody");
+ const headerRow=document.getElementById("matrixHeaderRow");
  const count=document.getElementById("matrixRecordCount");
  const range=document.getElementById("matrixRangeLabel");
  if(!tbody) return;
+
+ const customCols=visibleCustomFields();
+ if(headerRow){
+   headerRow.innerHTML=`<th>N°</th><th>Proyecto</th><th>Parroquia</th><th>Categoría</th><th>Monto (USD)</th><th>Trámite</th><th>Descripción</th><th>Estado</th><th>Fecha prevista</th><th>Avance</th><th>Área de Intervención</th>${customCols.map(f=>`<th>${esc(f.name)}</th>`).join("")}<th>Acciones</th>`;
+ }
 
  fillMatrixParishes();
  const filteredRows=matrixFilteredRows();
@@ -4291,6 +4471,7 @@ function renderMatrix(){
      <td>${esc(r.fecha_entrega||"—")}</td>
      <td>${r.avance==null?"—":esc(formatProgress(r.avance))}</td>
      <td>${esc(r.area_intervencion||"—")}</td>
+     ${customCols.map(f=>`<td class="custom-field-cell">${esc(getCustomValue(r.id,f.id)||"—")}</td>`).join("")}
      <td class="matrix-actions-cell">
        <button class="row-action detail" type="button" data-detail-item="${r.item}">◉ Ver detalle</button>
        <button class="row-action map" type="button" data-map-id="${r.id}" ${hasMap?"":"disabled"}>⌖ Ver en mapa</button>
@@ -4299,7 +4480,7 @@ function renderMatrix(){
        <button class="row-action delete" type="button" data-delete-id="${r.id}">🗑 Eliminar</button>
      </td>
    </tr>`;
- }).join(""):`<tr><td colspan="12" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
+ }).join(""):`<tr><td colspan="${12+customCols.length}" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
 
  tbody.querySelectorAll("[data-detail-item]").forEach(btn=>{
    btn.addEventListener("click",()=>openModal(btn.dataset.detailItem));
@@ -4358,6 +4539,7 @@ async function syncAuthUI(){
  const login=document.getElementById("matrixLoginPanel");
  const panel=document.getElementById("matrixDataPanel");
  const add=document.getElementById("addProjectBtn");
+ const addField=document.getElementById("addCustomFieldBtn");
  const logout=document.getElementById("matrixLogoutBtn");
 
  // La matriz es pública: siempre se muestra cuando Supabase está conectado.
@@ -4365,6 +4547,7 @@ async function syncAuthUI(){
    if(login) login.hidden=true;
    if(panel) panel.hidden=true;
    if(add) add.hidden=true;
+   if(addField) addField.hidden=true;
    if(logout) logout.hidden=true;
    return;
  }
@@ -4378,6 +4561,7 @@ async function syncAuthUI(){
  // El botón Agregar permanece visible para todos; si no hay sesión,
  // solicitará credenciales al hacer clic.
  if(add) add.hidden=false;
+ if(addField) addField.hidden=false;
  if(logout) logout.hidden=!currentSession;
 
  await refreshProjectsFromDatabase();
@@ -4465,6 +4649,7 @@ function bindAdminUI(){
    if(e.key==="Enter") matrixLogin();
  });
  document.getElementById("matrixLogoutBtn")?.addEventListener("click",matrixLogout);
+ document.getElementById("addCustomFieldBtn")?.addEventListener("click",openCustomFieldModal);
  document.getElementById("addProjectBtn")?.addEventListener("click",()=>openCrud());
  document.getElementById("matrixRefreshBtn")?.addEventListener("click",async()=>{
    await refreshProjectsFromDatabase();
@@ -4475,6 +4660,8 @@ function bindAdminUI(){
  document.getElementById("matrixParishFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixStatusFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixCoordinatesFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
+ document.getElementById("matrixCustomFieldFilter")?.addEventListener("change",()=>{updateCustomValueFilterOptions();matrixCurrentPage=1;renderMatrix();});
+ document.getElementById("matrixCustomValueFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixSort")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixClearBtn")?.addEventListener("click",()=>{
    document.getElementById("matrixSearch").value="";
@@ -4482,6 +4669,9 @@ function bindAdminUI(){
    document.getElementById("matrixParishFilter").value="";
    document.getElementById("matrixStatusFilter").value="";
    document.getElementById("matrixCoordinatesFilter").value="";
+   document.getElementById("matrixCustomFieldFilter").value="";
+   document.getElementById("matrixCustomValueFilter").innerHTML='<option value="">Todos</option>';
+   document.getElementById("matrixCustomValueFilter").disabled=true;
    document.getElementById("matrixSort").value="item-asc";
    matrixCurrentPage=1;
    renderMatrix();
@@ -4502,6 +4692,12 @@ function bindAdminUI(){
  document.getElementById("mediaViewer")?.addEventListener("click",e=>{
    if(e.target.dataset.mediaClose) closeMediaViewer();
  });
+
+ document.getElementById("customFieldType")?.addEventListener("change",updateCustomFieldOptionsVisibility);
+ document.getElementById("customFieldClose")?.addEventListener("click",closeCustomFieldModal);
+ document.getElementById("customFieldCancel")?.addEventListener("click",closeCustomFieldModal);
+ document.getElementById("customFieldSave")?.addEventListener("click",createCustomField);
+ document.getElementById("customFieldModal")?.addEventListener("click",e=>{if(e.target.dataset.customFieldClose)closeCustomFieldModal();});
 
  document.getElementById("crudClose")?.addEventListener("click",closeCrud);
  document.getElementById("crudCancel")?.addEventListener("click",closeCrud);
@@ -4539,6 +4735,7 @@ function bindAdminUI(){
    }
    if(e.key==="Escape"){
      closeCrud();
+     closeCustomFieldModal();
      hideAuthPrompt();
      closeMediaViewer();
      closeStreetView();
@@ -4649,6 +4846,50 @@ init().catch(err=>{
   </section>
 </div>
 
+<div id="customFieldModal" class="crud-modal" aria-hidden="true">
+  <div class="crud-backdrop" data-custom-field-close="true"></div>
+  <div class="crud-dialog" style="width:min(760px,calc(100% - 28px));" role="dialog" aria-modal="true">
+    <div class="crud-head">
+      <h3>Agregar campo a todos los proyectos</h3>
+      <button id="customFieldClose" class="crud-close" type="button">×</button>
+    </div>
+    <div class="crud-form">
+      <div class="db-message">El nuevo campo se crea una sola vez y queda disponible para todos los proyectos actuales y futuros.</div>
+      <div class="crud-grid">
+        <label class="field-label span2">Nombre del campo <span class="required-star">*</span>
+          <input id="customFieldName" class="field-control" type="text" placeholder="Ej. PAC de la Dirección">
+        </label>
+        <label class="field-label">Tipo
+          <select id="customFieldType" class="field-control">
+            <option value="select">Lista desplegable</option>
+            <option value="text">Texto</option>
+            <option value="number">Número</option>
+            <option value="date">Fecha</option>
+            <option value="boolean">Sí / No</option>
+          </select>
+        </label>
+        <label id="customFieldOptionsLabel" class="field-label span3">Opciones
+          <textarea id="customFieldOptions" class="field-control" placeholder="Una opción por línea.&#10;OBRAS PÚBLICAS&#10;AMBIENTE&#10;CULTURA&#10;PATRIMONIO"></textarea>
+        </label>
+        <label class="custom-check"><input id="customFieldShowMatrix" type="checkbox" checked> Mostrar en la Matriz</label>
+        <label class="custom-check"><input id="customFieldFilterable" type="checkbox" checked> Permitir filtro</label>
+        <label class="field-label">Orden
+          <input id="customFieldOrder" class="field-control" type="number" min="1" value="100">
+        </label>
+      </div>
+      <div style="margin-top:18px">
+        <h4 style="margin:0 0 8px;color:#0d2a5b">Campos existentes</h4>
+        <div id="customFieldExistingList" class="custom-field-existing-list"></div>
+      </div>
+      <div id="customFieldStatus" class="matrix-status"></div>
+      <div class="crud-foot">
+        <button id="customFieldCancel" class="matrix-btn" type="button">Cancelar</button>
+        <button id="customFieldSave" class="matrix-btn primary" type="button">Crear campo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="crudModal" class="crud-modal" aria-hidden="true">
   <div class="crud-backdrop" data-crud-close="true"></div>
   <div class="crud-dialog" role="dialog" aria-modal="true" aria-labelledby="crudTitle">
@@ -4725,6 +4966,12 @@ init().catch(err=>{
         <label class="field-label span2">Área de Intervención
           <textarea id="fAreaIntervencion" class="field-control" placeholder="Ej. 4615 m2, 0.75 km, NO o POR DEFINIR"></textarea>
         </label>
+        <section id="customFieldsFormSection" class="custom-fields-form-section span3">
+          <h4>Campos adicionales</h4>
+          <p>Los campos creados desde la Matriz aparecen aquí automáticamente.</p>
+          <div id="customFieldsFormGrid" class="custom-fields-form-grid"></div>
+        </section>
+
         <section class="media-manager" id="mediaManager">
           <h4>Archivos del proyecto</h4>
           <p class="media-help">Puedes adjuntar imágenes, PDF, videos MP4 y panoramas 360°. Para un proyecto nuevo, guárdalo primero y luego vuelve a editarlo para cargar archivos.</p>
