@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V28.2">
+  <meta name="dashboard-version" content="V28.3">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1615,7 +1615,7 @@
     .custom-check{display:flex;align-items:center;gap:8px;color:#344054;font-size:11px;font-weight:700;min-height:38px}
     .custom-check input{accent-color:#0d2a5b}
     .custom-field-existing-list{display:grid;gap:6px;max-height:180px;overflow:auto}
-    .custom-field-existing-item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #e1e7ef;border-radius:7px;background:#f9fbfd;font-size:10px}
+    .custom-field-existing-item{display:grid;grid-template-columns:minmax(160px,1fr) minmax(130px,auto) auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #e1e7ef;border-radius:7px;background:#f9fbfd;font-size:10px}
     .custom-field-existing-item strong{color:#203858}.custom-field-existing-item span{color:#667085}
     .custom-field-cell{min-width:140px;max-width:260px;white-space:pre-line;overflow-wrap:anywhere}
     .matrix-table{min-width:1750px!important}
@@ -1633,6 +1633,8 @@
       cursor:not-allowed;
       filter:grayscale(.25);
     }
+
+    .custom-field-edit-btn{padding:6px 10px!important;min-height:30px!important}
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1895,7 +1897,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V28.2 cargado");
+console.info("Dashboard GADMR - V28.3 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -1923,6 +1925,7 @@ let currentDashboardParish="";
 let customFields=[];
 let customValues=[];
 let customValuesMap=new Map();
+let editingCustomFieldId=null;
 let googleMapsLoadPromise=null;
 let streetViewPanoramaInstance=null;
 
@@ -3455,7 +3458,42 @@ function renderCustomFieldsExistingList(){
  const w=document.getElementById("customFieldExistingList");if(!w)return;
  if(!customFields.length){w.innerHTML='<div class="custom-field-empty">No existen campos adicionales.</div>';return;}
  const tn={select:"Lista",text:"Texto",number:"Número",date:"Fecha",boolean:"Sí / No"};
- w.innerHTML=sortedCustomFields().map(f=>`<div class="custom-field-existing-item"><strong>${esc(f.name)}</strong><span>${esc(tn[f.field_type]||f.field_type)}</span><span>${f.show_in_matrix===false?"Oculto":"Visible"}</span></div>`).join("");
+ w.innerHTML=sortedCustomFields().map(f=>`<div class="custom-field-existing-item">
+   <strong>${esc(f.name)}</strong>
+   <span>${esc(tn[f.field_type]||f.field_type)} · Posición ${Number(f.display_order)||100}</span>
+   <button class="matrix-btn custom-field-edit-btn" type="button" data-edit-custom-field="${f.id}">Editar</button>
+ </div>`).join("");
+ w.querySelectorAll("[data-edit-custom-field]").forEach(btn=>{
+   btn.addEventListener("click",()=>startEditCustomField(btn.dataset.editCustomField));
+ });
+}
+
+function resetCustomFieldEditor(){
+ editingCustomFieldId=null;
+ document.getElementById("customFieldName").value="";
+ document.getElementById("customFieldType").value="select";
+ document.getElementById("customFieldOptions").value="";
+ document.getElementById("customFieldShowMatrix").checked=true;
+ document.getElementById("customFieldFilterable").checked=true;
+ document.getElementById("customFieldOrder").value=customFields.length?Math.max(...customFields.map(f=>Number(f.display_order)||0))+10:100;
+ document.getElementById("customFieldStatus").textContent="";
+ document.getElementById("customFieldSave").textContent="Crear campo";
+ updateCustomFieldOptionsVisibility();
+}
+function startEditCustomField(fieldId){
+ const field=customFields.find(f=>String(f.id)===String(fieldId));
+ if(!field)return;
+ editingCustomFieldId=field.id;
+ document.getElementById("customFieldName").value=field.name||"";
+ document.getElementById("customFieldType").value=field.field_type||"text";
+ document.getElementById("customFieldOptions").value=fieldOptions(field).join("\\n");
+ document.getElementById("customFieldShowMatrix").checked=field.show_in_matrix!==false;
+ document.getElementById("customFieldFilterable").checked=field.filterable!==false;
+ document.getElementById("customFieldOrder").value=Number(field.display_order)||100;
+ document.getElementById("customFieldStatus").textContent=`Editando: ${field.name}`;
+ document.getElementById("customFieldSave").textContent="Guardar cambios";
+ updateCustomFieldOptionsVisibility();
+ document.getElementById("customFieldName").focus();
 }
 function updateCustomFieldOptionsVisibility(){
  const l=document.getElementById("customFieldOptionsLabel");if(l)l.hidden=document.getElementById("customFieldType")?.value!=="select";
@@ -3471,14 +3509,8 @@ async function openCustomFieldModal(){
    }
  }
  if(!currentSession){requireEditor(openCustomFieldModal);return;}
- document.getElementById("customFieldName").value="";
- document.getElementById("customFieldType").value="select";
- document.getElementById("customFieldOptions").value="";
- document.getElementById("customFieldShowMatrix").checked=true;
- document.getElementById("customFieldFilterable").checked=true;
- document.getElementById("customFieldOrder").value=customFields.length?Math.max(...customFields.map(f=>Number(f.display_order)||0))+10:100;
- document.getElementById("customFieldStatus").textContent="";
- updateCustomFieldOptionsVisibility();renderCustomFieldsExistingList();
+ resetCustomFieldEditor();
+ renderCustomFieldsExistingList();
  const m=document.getElementById("customFieldModal");m.classList.add("open");m.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
 }
 function closeCustomFieldModal(){
@@ -3490,22 +3522,48 @@ async function createCustomField(){
  const opts=[...new Set(document.getElementById("customFieldOptions").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
  if(!name){status.textContent="Escribe el nombre del campo.";return;}
  if(type==="select"&&!opts.length){status.textContent="Agrega al menos una opción.";return;}
- btn.disabled=true;status.textContent="Creando campo…";
+
+ btn.disabled=true;
+ status.textContent=editingCustomFieldId?"Guardando cambios…":"Creando campo…";
+
  try{
-   let key=slugifyFieldKey(name);if(customFields.some(f=>f.field_key===key))key=`${key}_${Date.now().toString().slice(-5)}`;
-   const {error}=await dbClient.from("project_custom_fields").insert({
-     name,field_key:key,field_type:type,options:type==="select"?opts:[],
+   const payload={
+     name,
+     field_type:type,
+     options:type==="select"?opts:[],
      show_in_matrix:document.getElementById("customFieldShowMatrix").checked,
      filterable:document.getElementById("customFieldFilterable").checked,
-     display_order:Number(document.getElementById("customFieldOrder").value)||100,
-     created_by:currentSession?.user?.id||null
-   });
-   if(error)throw error;
-   await loadCustomFieldsAndValues();renderMatrix();renderCustomFieldsExistingList();
-   status.textContent="Campo creado correctamente.";
-   setTimeout(closeCustomFieldModal,600);
- }catch(err){console.error(err);status.textContent=`No se pudo crear: ${err.message||err}`;}
- finally{btn.disabled=false;}
+     display_order:Number(document.getElementById("customFieldOrder").value)||100
+   };
+
+   if(editingCustomFieldId){
+     const current=customFields.find(f=>String(f.id)===String(editingCustomFieldId));
+     payload.field_key=current?.field_key||slugifyFieldKey(name);
+     const {error}=await dbClient.from("project_custom_fields").update(payload).eq("id",editingCustomFieldId);
+     if(error)throw error;
+   }else{
+     let key=slugifyFieldKey(name);
+     if(customFields.some(f=>f.field_key===key))key=`${key}_${Date.now().toString().slice(-5)}`;
+     payload.field_key=key;
+     payload.created_by=currentSession?.user?.id||null;
+     const {error}=await dbClient.from("project_custom_fields").insert(payload);
+     if(error)throw error;
+   }
+
+   const wasEditing=!!editingCustomFieldId;
+   await loadCustomFieldsAndValues();
+   renderMatrix();
+   renderCustomFieldsExistingList();
+   renderCustomFieldsForm(document.getElementById("projectId")?.value||null);
+   status.textContent=wasEditing?"Campo actualizado correctamente.":"Campo creado correctamente.";
+   resetCustomFieldEditor();
+   renderCustomFieldsExistingList();
+ }catch(err){
+   console.error(err);
+   status.textContent=`No se pudo guardar: ${err.message||err}`;
+ }finally{
+   btn.disabled=false;
+ }
 }
 
 function dbRowToProject(r){
@@ -4922,7 +4980,7 @@ init().catch(err=>{
       <button id="customFieldClose" class="crud-close" type="button">×</button>
     </div>
     <div class="crud-form">
-      <div class="db-message">El nuevo campo se crea una sola vez y queda disponible para todos los proyectos actuales y futuros.</div>
+      <div class="db-message">Puedes crear un campo nuevo o editar uno existente. Los cambios de título, opciones, visibilidad y posición se aplican a todos los proyectos.</div>
       <div class="crud-grid">
         <label class="field-label span2">Nombre del campo <span class="required-star">*</span>
           <input id="customFieldName" class="field-control" type="text" placeholder="Ej. PAC de la Dirección">
@@ -4941,7 +4999,7 @@ init().catch(err=>{
         </label>
         <label class="custom-check"><input id="customFieldShowMatrix" type="checkbox" checked> Mostrar en la Matriz</label>
         <label class="custom-check"><input id="customFieldFilterable" type="checkbox" checked> Permitir filtro</label>
-        <label class="field-label">Orden
+        <label class="field-label">Posición de la columna
           <input id="customFieldOrder" class="field-control" type="number" min="1" value="100">
         </label>
       </div>
