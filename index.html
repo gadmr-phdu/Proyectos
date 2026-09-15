@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V29.3">
+  <meta name="dashboard-version" content="V29.4">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -2066,6 +2066,97 @@
       }
     }
 
+
+    /* =========================================================
+       V29.4 — KPIs MÁS PROTAGÓNICOS SIN CAMBIAR SU ANCHO
+       ========================================================= */
+
+    /* Mantiene dos tarjetas en una sola fila y exactamente el mismo ancho */
+    .universe-dashboard-v291 .universe-top-kpis{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      gap:9px !important;
+    }
+
+    /* Aumentamos solo la altura para dar aire a la información */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-card{
+      min-height:162px !important;
+      height:162px !important;
+      padding:15px 10px 13px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:flex-start !important;
+    }
+
+    /* Títulos algo más visibles, pero secundarios al número */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-label{
+      min-height:24px !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      font-size:10px !important;
+      line-height:1.15 !important;
+      font-weight:800 !important;
+      text-align:center !important;
+    }
+
+    /* Número principal: protagonista */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-card strong{
+      font-size:46px !important;
+      line-height:.95 !important;
+      margin:8px 0 7px !important;
+      font-weight:800 !important;
+      letter-spacing:-1px !important;
+    }
+
+    /* Monto: más grande para que se lea claramente */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-money{
+      font-size:16px !important;
+      line-height:1.1 !important;
+      font-weight:800 !important;
+      margin-bottom:8px !important;
+    }
+
+    /* Separador y porcentaje alineados hacia la parte inferior */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-separator{
+      width:72% !important;
+      margin-top:auto !important;
+      margin-bottom:7px !important;
+    }
+
+    .universe-dashboard-v291 .universe-top-kpis small{
+      font-size:8.5px !important;
+      line-height:1.15 !important;
+      min-height:10px !important;
+    }
+
+    /* No permitir que Entregados salte a otra fila */
+    .universe-dashboard-v291 .universe-delivered-card{
+      grid-column:auto !important;
+    }
+
+    @media(max-width:1150px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      }
+      .universe-dashboard-v291 .universe-top-kpis .kpi-card{
+        min-height:155px !important;
+        height:155px !important;
+      }
+      .universe-dashboard-v291 .universe-top-kpis .kpi-card strong{
+        font-size:42px !important;
+      }
+      .universe-dashboard-v291 .universe-top-kpis .kpi-money{
+        font-size:14px !important;
+      }
+    }
+
+    @media(max-width:560px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:1fr !important;
+      }
+    }
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -2336,7 +2427,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V29.3 cargado");
+console.info("Dashboard GADMR - V29.4 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
