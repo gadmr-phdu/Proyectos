@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V28.6">
+  <meta name="dashboard-version" content="V28.6.1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1783,16 +1783,16 @@
       line-height:1.15 !important;
       white-space:normal !important;
     }
-    #matrixDataPanel tr.project-status-row[data-project-status*="entregado"] > td{
+    #matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td{
       background-color:rgba(15,157,88,.10) !important;
     }
-    #matrixDataPanel tr.project-status-row[data-project-status*="desarrollo"] > td{
+    #matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td{
       background-color:rgba(18,62,120,.075) !important;
     }
-    #matrixDataPanel tr.project-status-row[data-project-status*="no iniciado"] > td{
+    #matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td{
       background-color:rgba(220,53,69,.075) !important;
     }
-    #matrixDataPanel tr.project-status-row[data-project-status*="remitido"] > td{
+    #matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td{
       background-color:rgba(245,158,11,.10) !important;
     }
 
@@ -2058,7 +2058,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V28.6 cargado");
+console.info("Dashboard GADMR - V28.6.1 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -4742,7 +4742,7 @@ function renderMatrix(){
 
  tbody.innerHTML=rows.length?rows.map(r=>{
    const hasMap=projectLocations(dbRowToProject(r)).length>0;
-   const matrixRowStatus=norm(r.estado_dashboard||r.estado_original||"");
+   const matrixRowStatus=String(r.estado_dashboard||r.estado_original||"").trim();
    return `<tr class="project-status-row" data-project-status="${esc(matrixRowStatus)}">
      <td>${String(r.item??"").padStart(2,"0")}</td>
      <td class="matrix-project">${esc(r.proyecto||"")}</td>
