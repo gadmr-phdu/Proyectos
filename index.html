@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V28.1">
+  <meta name="dashboard-version" content="V28.2">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1895,7 +1895,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V28.1 cargado");
+console.info("Dashboard GADMR - V28.2 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -3379,7 +3379,13 @@ async function loadCustomFieldsAndValues(){
    if(section) section.hidden=false;
    return true;
  }catch(err){
-   console.warn("V28.1 · Campos personalizados no disponibles. El Dashboard continuará funcionando.",err);
+   console.warn("V28.2 · Campos personalizados no disponibles. El Dashboard continuará funcionando.",{
+     message:err?.message,
+     details:err?.details,
+     hint:err?.hint,
+     code:err?.code,
+     error:err
+   });
    customFields=[];
    customValues=[];
    rebuildCustomValuesMap();
@@ -3389,8 +3395,8 @@ async function loadCustomFieldsAndValues(){
 
    const btn=document.getElementById("addCustomFieldBtn");
    if(btn){
-     btn.disabled=true;
-     btn.title="Campos personalizados no disponibles. Ejecuta el SQL V28.1 en Supabase.";
+     btn.disabled=false;
+     btn.title="Reintentar conexión con campos personalizados";
    }
 
    const section=document.getElementById("customFieldsFormSection");
@@ -3454,11 +3460,15 @@ function renderCustomFieldsExistingList(){
 function updateCustomFieldOptionsVisibility(){
  const l=document.getElementById("customFieldOptionsLabel");if(l)l.hidden=document.getElementById("customFieldType")?.value!=="select";
 }
-function openCustomFieldModal(){
+async function openCustomFieldModal(){
  if(!dbReady)return;
  if(window.customFieldsReady===false){
-   alert("Los campos personalizados todavía no están disponibles en Supabase. Ejecuta el archivo SUPABASE_V28_1_CAMPOS_PERSONALIZADOS.sql y recarga la página. El resto del Dashboard puede seguir utilizándose normalmente.");
-   return;
+   const recovered=await loadCustomFieldsAndValues();
+   if(!recovered){
+     const detail=window.customFieldsError?.message||window.customFieldsError?.details||"Error de acceso a las tablas de campos personalizados.";
+     alert("No se pudo acceder al módulo de campos personalizados.\n\nDetalle: "+detail+"\n\nEjecuta REPARAR_SUPABASE_V28_2.sql y vuelve a cargar la página.");
+     return;
+   }
  }
  if(!currentSession){requireEditor(openCustomFieldModal);return;}
  document.getElementById("customFieldName").value="";
@@ -4617,8 +4627,8 @@ async function syncAuthUI(){
  if(add) add.hidden=false;
  if(addField){
    addField.hidden=false;
-   addField.disabled=window.customFieldsReady===false;
-   if(window.customFieldsReady===false) addField.title="Campos personalizados no disponibles. Ejecuta el SQL V28.1 en Supabase.";
+   addField.disabled=false;
+   if(window.customFieldsReady===false) addField.title="Reintentar conexión con campos personalizados";
  }
  if(logout) logout.hidden=!currentSession;
 
