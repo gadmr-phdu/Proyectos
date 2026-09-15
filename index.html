@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V28.3">
+  <meta name="dashboard-version" content="V28.4">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1635,6 +1635,112 @@
     }
 
     .custom-field-edit-btn{padding:6px 10px!important;min-height:30px!important}
+
+    /* =========================================================
+       V28.4 - MATRIZ AJUSTADA AL ANCHO DE PANTALLA
+       ========================================================= */
+    #matrixDataPanel{
+      width:100%;
+      max-width:100%;
+      min-width:0;
+    }
+
+    #matrixDataPanel .matrix-table-wrap{
+      width:100%;
+      max-width:100%;
+      overflow-x:hidden !important;
+    }
+
+    #matrixDataPanel .matrix-table{
+      width:100% !important;
+      min-width:0 !important;
+      max-width:100% !important;
+      table-layout:fixed !important;
+    }
+
+    #matrixDataPanel .matrix-table th,
+    #matrixDataPanel .matrix-table td{
+      min-width:0 !important;
+      max-width:none !important;
+      padding:7px 5px !important;
+      font-size:9px !important;
+      line-height:1.22 !important;
+      white-space:normal !important;
+      overflow-wrap:anywhere !important;
+      word-break:normal !important;
+      vertical-align:top !important;
+    }
+
+    /* Dar más espacio a Proyecto y menos a columnas cortas */
+    #matrixDataPanel .matrix-table th:nth-child(1),
+    #matrixDataPanel .matrix-table td:nth-child(1){width:3.5% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(2),
+    #matrixDataPanel .matrix-table td:nth-child(2){width:17% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(3),
+    #matrixDataPanel .matrix-table td:nth-child(3){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(4),
+    #matrixDataPanel .matrix-table td:nth-child(4){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(5),
+    #matrixDataPanel .matrix-table td:nth-child(5){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(6),
+    #matrixDataPanel .matrix-table td:nth-child(6){width:8% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(7),
+    #matrixDataPanel .matrix-table td:nth-child(7){width:10% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(8),
+    #matrixDataPanel .matrix-table td:nth-child(8){width:8% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(9),
+    #matrixDataPanel .matrix-table td:nth-child(9){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(10),
+    #matrixDataPanel .matrix-table td:nth-child(10){width:5% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(11),
+    #matrixDataPanel .matrix-table td:nth-child(11){width:7% !important;}
+
+    #matrixDataPanel .matrix-actions-cell{
+      width:7.5% !important;
+      white-space:normal !important;
+    }
+
+    #matrixDataPanel .matrix-actions-cell .matrix-btn,
+    #matrixDataPanel .matrix-actions-cell button{
+      padding:5px 6px !important;
+      min-width:0 !important;
+      font-size:8px !important;
+      margin:1px !important;
+    }
+
+    #matrixDataPanel .custom-field-cell{
+      min-width:0 !important;
+      max-width:none !important;
+    }
+
+    /* Encabezados compactos para ganar espacio sin perder legibilidad */
+    #matrixDataPanel .matrix-table thead th{
+      font-size:8.5px !important;
+      line-height:1.15 !important;
+      padding:7px 4px !important;
+    }
+
+    @media (max-width:1200px){
+      #matrixDataPanel .matrix-table th,
+      #matrixDataPanel .matrix-table td{
+        font-size:8px !important;
+        padding:6px 3px !important;
+      }
+      #matrixDataPanel .matrix-table thead th{
+        font-size:7.5px !important;
+      }
+    }
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1897,7 +2003,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V28.3 cargado");
+console.info("Dashboard GADMR - V28.4 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
