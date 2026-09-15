@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V29">
+  <meta name="dashboard-version" content="V29.2">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -1914,6 +1914,114 @@
       .universe-delivered-card{grid-column:auto}
     }
 
+
+/* V29.1 — KPIs en dos universos lado a lado */
+.universe-dashboard-v291{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:stretch;margin-bottom:20px}
+.universe-dashboard-v291 .universe-block{min-width:0;padding:0 12px 14px!important;border:2px solid #176889!important;border-radius:34px!important;background:#fff;overflow:hidden}
+.universe-dashboard-v291 .universe-out{border-color:#ef2020!important}
+.universe-dashboard-v291 .universe-heading{height:48px;margin:0!important;display:flex;align-items:center;justify-content:center}
+.universe-dashboard-v291 .universe-heading h2{margin:0!important;font-size:24px!important;line-height:1!important;color:#176889!important;text-align:center}
+.universe-dashboard-v291 .universe-out .universe-heading h2{color:#d60000!important}
+.universe-dashboard-v291 .universe-top-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 6px 12px}
+.universe-dashboard-v291 .universe-top-kpis .kpi-card{min-height:128px!important;padding:13px 10px 11px!important;border-radius:8px!important;box-shadow:0 2px 7px rgba(16,39,75,.10)!important}
+.universe-dashboard-v291 .universe-top-kpis .kpi-card strong{font-size:30px!important;margin:7px 0 4px!important;line-height:1!important}
+.universe-dashboard-v291 .universe-top-kpis .kpi-label{font-size:9px!important;line-height:1.2!important}
+.universe-dashboard-v291 .universe-top-kpis .kpi-money{font-size:13px!important}
+.universe-dashboard-v291 .universe-top-kpis small{font-size:8px!important}
+.universe-dashboard-v291 .universe-direction-card{min-height:130px!important;margin:0 6px!important;padding:14px 10px 10px!important;border-radius:8px!important;box-shadow:0 2px 7px rgba(16,39,75,.10)!important}
+.universe-dashboard-v291 .universe-direction-card .kpi-label{display:block;text-align:center;font-size:11px!important;color:#0d2f62!important}
+.universe-dashboard-v291 .direction-breakdown{max-height:95px!important;margin-top:9px!important}
+@media(max-width:1000px){.universe-dashboard-v291{grid-template-columns:1fr!important}}
+@media(max-width:520px){.universe-dashboard-v291 .universe-top-kpis{grid-template-columns:1fr}.universe-dashboard-v291 .universe-heading h2{font-size:20px!important}}
+
+
+    /* =========================================================
+       V29.2 — KPIs SUPERIORES EN UNA SOLA FILA + ENCABEZADOS
+       ========================================================= */
+
+    .universe-dashboard-v291 .universe-block{
+      position:relative;
+      padding-top:0 !important;
+      overflow:hidden;
+    }
+
+    .universe-dashboard-v291 .universe-heading{
+      min-height:54px !important;
+      margin:0 -14px 14px !important;
+      padding:0 18px !important;
+      border-radius:31px 31px 0 0;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .universe-dashboard-v291 .universe-pac .universe-heading{
+      background:linear-gradient(135deg,#0d315f 0%,#176f9a 100%);
+      box-shadow:inset 0 -1px 0 rgba(255,255,255,.18);
+    }
+
+    .universe-dashboard-v291 .universe-out .universe-heading{
+      background:linear-gradient(135deg,#a9141c 0%,#e72d35 100%);
+      box-shadow:inset 0 -1px 0 rgba(255,255,255,.18);
+    }
+
+    .universe-dashboard-v291 .universe-heading::after{
+      content:"";
+      position:absolute;
+      left:12%;
+      right:12%;
+      bottom:0;
+      height:3px;
+      background:rgba(255,255,255,.42);
+      border-radius:3px 3px 0 0;
+    }
+
+    .universe-dashboard-v291 .universe-heading h2,
+    .universe-dashboard-v291 .universe-out .universe-heading h2{
+      position:relative;
+      z-index:1;
+      color:#fff !important;
+      font-size:21px !important;
+      font-weight:800 !important;
+      letter-spacing:.8px;
+      text-shadow:0 1px 2px rgba(0,0,0,.18);
+    }
+
+    /* Siempre dos KPIs en una misma fila dentro de cada universo */
+    .universe-dashboard-v291 .universe-top-kpis{
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      gap:9px !important;
+      align-items:stretch;
+    }
+
+    .universe-dashboard-v291 .universe-top-kpis > .kpi-card{
+      width:auto !important;
+      min-width:0 !important;
+      grid-column:auto !important;
+      margin:0 !important;
+    }
+
+    /* Anula la regla V29 que hacía que Entregados ocupara toda la fila */
+    .universe-dashboard-v291 .universe-delivered-card{
+      grid-column:auto !important;
+    }
+
+    @media(max-width:1150px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      }
+      .universe-dashboard-v291 .universe-delivered-card{
+        grid-column:auto !important;
+      }
+    }
+
+    /* Solo en pantallas realmente pequeñas se apilan */
+    @media(max-width:560px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:1fr !important;
+      }
+    }
+
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1973,51 +2081,38 @@
       <div id="dashboardFilterSummary" class="dashboard-filter-summary">Mostrando información de todas las parroquias</div>
     </section>
 
-    <section class="universe-dashboard">
+    <section class="universe-dashboard universe-dashboard-v291">
       <div class="universe-block universe-pac">
-        <div class="universe-heading">
-          <span class="universe-number">UNIVERSO 1</span>
-          <h2>PROYECTOS PAC</h2>
-        </div>
-        <div class="universe-grid">
+        <div class="universe-heading"><h2>PAC</h2></div>
+        <div class="universe-top-kpis">
           <article class="kpi-card kpi-pac universe-summary-card">
-            <span class="kpi-label">TOTAL PROYECTOS PAC</span><strong id="kpiPac">—</strong>
-            <div class="kpi-money" id="moneyPac">—</div><div class="kpi-separator"></div>
-            <small id="pctPac">Universo PAC</small>
-          </article>
-          <article class="kpi-card universe-direction-card">
-            <span class="kpi-label">INVERSIÓN PAC POR DIRECCIÓN</span>
-            <div id="pacDirectionBreakdown" class="direction-breakdown"></div>
+            <span class="kpi-label">TOTAL PROYECTOS</span><strong id="kpiPac">—</strong>
+            <div class="kpi-money" id="moneyPac">—</div><div class="kpi-separator"></div><small id="pctPac">Universo PAC</small>
           </article>
           <article class="kpi-card kpi-oopp universe-delivered-card">
-            <span class="kpi-label">PAC ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiPacDelivered">—</strong>
-            <div class="kpi-money" id="moneyPacDelivered">—</div><div class="kpi-separator"></div>
-            <small id="pctPacDelivered">—</small>
+            <span class="kpi-label">ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiPacDelivered">—</strong>
+            <div class="kpi-money" id="moneyPacDelivered">—</div><div class="kpi-separator"></div><small id="pctPacDelivered">—</small>
           </article>
         </div>
+        <article class="kpi-card universe-direction-card">
+          <span class="kpi-label">INVERSIÓN POR DIRECCIÓN</span><div id="pacDirectionBreakdown" class="direction-breakdown"></div>
+        </article>
       </div>
-
       <div class="universe-block universe-out">
-        <div class="universe-heading">
-          <span class="universe-number">UNIVERSO 2</span>
-          <h2>FUERA DEL PAC</h2>
-        </div>
-        <div class="universe-grid">
+        <div class="universe-heading"><h2>FUERA DEL PAC</h2></div>
+        <div class="universe-top-kpis">
           <article class="kpi-card kpi-otros universe-summary-card">
-            <span class="kpi-label">TOTAL FUERA DEL PAC</span><strong id="kpiOtros">—</strong>
-            <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div>
-            <small id="pctOtros">Universo Fuera del PAC</small>
-          </article>
-          <article class="kpi-card universe-direction-card">
-            <span class="kpi-label">INVERSIÓN FUERA DEL PAC POR DIRECCIÓN</span>
-            <div id="outsideDirectionBreakdown" class="direction-breakdown"></div>
+            <span class="kpi-label">TOTAL</span><strong id="kpiOtros">—</strong>
+            <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div><small id="pctOtros">Universo Fuera del PAC</small>
           </article>
           <article class="kpi-card kpi-oopp universe-delivered-card">
-            <span class="kpi-label">FUERA DEL PAC ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiOutsideDelivered">—</strong>
-            <div class="kpi-money" id="moneyOutsideDelivered">—</div><div class="kpi-separator"></div>
-            <small id="pctOutsideDelivered">—</small>
+            <span class="kpi-label">ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiOutsideDelivered">—</strong>
+            <div class="kpi-money" id="moneyOutsideDelivered">—</div><div class="kpi-separator"></div><small id="pctOutsideDelivered">—</small>
           </article>
         </div>
+        <article class="kpi-card universe-direction-card">
+          <span class="kpi-label">INVERSIÓN POR DIRECCIÓN</span><div id="outsideDirectionBreakdown" class="direction-breakdown"></div>
+        </article>
       </div>
     </section>
 
@@ -2197,7 +2292,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V29 cargado");
+console.info("Dashboard GADMR - V29.2 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
