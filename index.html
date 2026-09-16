@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V29.5">
+  <meta name="dashboard-version" content="V29.6">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -2068,7 +2068,7 @@
 
 
     /* =========================================================
-       V29.5 — KPIs MÁS PROTAGÓNICOS SIN CAMBIAR SU ANCHO
+       V29.6 — KPIs MÁS PROTAGÓNICOS SIN CAMBIAR SU ANCHO
        ========================================================= */
 
     /* Mantiene dos tarjetas en una sola fila y exactamente el mismo ancho */
@@ -2158,7 +2158,7 @@
     }
 
 
-/* V29.5 */
+/* V29.6 */
 .header-controls{margin-left:auto;display:flex;align-items:center;gap:14px;min-width:0}
 .header-parish-filter{display:grid;grid-template-columns:auto minmax(170px,230px);align-items:center;gap:3px 8px;color:#fff}
 .header-parish-filter>span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.25px}
@@ -2185,6 +2185,103 @@
 #matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell{background:#f3c9cd!important;color:#9c2530!important}
 #matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell{background:#f6d8ad!important;color:#85500b!important}
 #matrixDataPanel td.matrix-status-cell .matrix-status-pill{font-weight:800!important;color:inherit!important;background:transparent!important;border:0!important;box-shadow:none!important}
+
+
+/* =========================================================
+   V29.6 — ESTADO SOLO EN TEXTO + PARROQUIA BAJO REFORMA
+   ========================================================= */
+
+/* Recupera espacio del título: el bloque derecho vuelve a ser compacto */
+.report-date-v296{
+  margin-left:auto !important;
+  flex:0 0 auto !important;
+  max-width:330px !important;
+  align-items:flex-start !important;
+}
+.report-date-v296 .report-date-content{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:2px !important;
+  min-width:250px;
+}
+.report-parish-row{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:5px;
+  width:100%;
+}
+.report-parish-row>span{
+  font-size:9px;
+  line-height:1;
+  font-weight:800;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.82);
+}
+.report-parish-row select{
+  height:29px;
+  flex:1;
+  min-width:155px;
+  max-width:230px;
+  padding:0 26px 0 8px;
+  border:1px solid rgba(255,255,255,.38);
+  border-radius:6px;
+  background:#fff;
+  color:#17365f;
+  font-size:10px;
+  font-weight:700;
+}
+.report-date-v296 #dashboardFilterSummary{
+  width:100%;
+  margin:1px 0 3px;
+  text-align:right;
+  color:rgba(255,255,255,.70);
+  font-size:7px;
+  line-height:1.1;
+  white-space:nowrap;
+}
+.report-date-v296 .report-edit-btn{
+  margin-top:1px !important;
+}
+
+/* MATRIZ: elimina cualquier fondo de estado. Conserva solo zebra normal */
+#matrixDataPanel tr.project-status-row > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row:nth-child(even) > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status] > td.matrix-status-cell{
+  background-color:inherit !important;
+  font-weight:800 !important;
+}
+
+/* El estado se destaca ÚNICAMENTE por el texto, con colores más vibrantes */
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td.matrix-status-cell .matrix-status-pill{
+  color:#009447 !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td.matrix-status-cell .matrix-status-pill{
+  color:#0067d9 !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell .matrix-status-pill{
+  color:#e00016 !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell .matrix-status-pill{
+  color:#e66b00 !important;
+}
+#matrixDataPanel td.matrix-status-cell .matrix-status-pill{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  font-weight:800 !important;
+}
+
+@media(max-width:900px){
+  .report-date-v296{max-width:280px !important}
+  .report-date-v296 .report-date-content{min-width:210px}
+  .report-date-v296 #dashboardFilterSummary{display:none}
+}
 
 </style>
 </head>
@@ -2223,21 +2320,19 @@
         <p>Jefatura de Diseño de la Obra Pública</p>
       </div>
     </div>
-    <div class="header-controls">
-      <div class="header-parish-filter">
-        <span>Parroquia</span>
-        <select id="dashboardParishFilter">
-          <option value="">Todas las parroquias</option>
-        </select>
-        <small id="dashboardFilterSummary">Mostrando información de todas las parroquias</small>
-      </div>
-      <div class="report-date">
-        <svg viewBox="0 0 24 24"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v14A1.5 1.5 0 0 1 19 21.5H5A1.5 1.5 0 0 1 3.5 20V6A1.5 1.5 0 0 1 5 4.5Z"/></svg>
-        <div class="report-date-content">
-          <strong id="reportCutText">Agosto 2026</strong>
-          <strong id="budgetReformText" class="budget-reform-text">Reforma Presupuestaria N° 9</strong>
-          <button id="editReportInfoBtn" class="report-edit-btn" type="button">Editar</button>
+    <div class="report-date report-date-v296">
+      <svg viewBox="0 0 24 24"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v14A1.5 1.5 0 0 1 19 21.5H5A1.5 1.5 0 0 1 3.5 20V6A1.5 1.5 0 0 1 5 4.5Z"/></svg>
+      <div class="report-date-content">
+        <strong id="reportCutText">Agosto 2026</strong>
+        <strong id="budgetReformText" class="budget-reform-text">Reforma Presupuestaria N° 9</strong>
+        <div class="report-parish-row">
+          <span>Parroquia</span>
+          <select id="dashboardParishFilter">
+            <option value="">Todas las parroquias</option>
+          </select>
         </div>
+        <small id="dashboardFilterSummary">Mostrando información de todas las parroquias</small>
+        <button id="editReportInfoBtn" class="report-edit-btn" type="button">Editar</button>
       </div>
     </div>
   </header>
@@ -2454,7 +2549,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V29.5 cargado");
+console.info("Dashboard GADMR - V29.6 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
