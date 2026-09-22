@@ -2590,10 +2590,29 @@
   .universe-dashboard-v291 .universe-top-kpis .kpi-money{font-size:10.5px !important}
   .universe-dashboard-v291 .universe-top-kpis .kpi-label{font-size:7.4px !important}
 }
+
+/* V29.9.1 — acceso visible a navegación en móvil */
+.mobile-nav-toggle{display:none}
+.mobile-nav-backdrop{display:none}
+@media(max-width:900px){
+  .mobile-nav-toggle{
+    display:flex;position:fixed;left:12px;bottom:16px;z-index:10020;
+    width:48px;height:48px;border:0;border-radius:50%;align-items:center;justify-content:center;
+    background:#0b3569;color:#fff;font-size:24px;font-weight:800;
+    box-shadow:0 5px 18px rgba(0,0,0,.28);cursor:pointer;
+  }
+  body.sidebar-mobile-open .mobile-nav-toggle{left:240px;background:#fff;color:#0b3569;border:1px solid #d6e0eb}
+  .mobile-nav-backdrop{position:fixed;inset:0;background:rgba(5,22,43,.42);z-index:9998}
+  body.sidebar-mobile-open .mobile-nav-backdrop{display:block}
+  .admin-sidebar{z-index:10010 !important;box-shadow:8px 0 24px rgba(0,0,0,.18)}
+}
 </style>
 
 </head>
 <body class="sidebar-collapsed">
+
+  <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+  <div class="mobile-nav-backdrop" id="mobileNavBackdrop" aria-hidden="true"></div>
 
   <aside class="admin-sidebar" id="adminSidebar" aria-label="Panel de navegación">
     <div class="sidebar-head">
@@ -2859,7 +2878,7 @@
 </div>
 
 <script>
-console.info("Dashboard GADMR - V29.8 cargado");
+console.info("Dashboard GADMR - V29.9.1 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -5822,9 +5841,21 @@ function bindAdminUI(){
    });
  });
 
+ const mobileNavToggle=document.getElementById("mobileNavToggle");
+ const mobileNavBackdrop=document.getElementById("mobileNavBackdrop");
+ const setMobileNavState=(open)=>{
+   document.body.classList.toggle("sidebar-mobile-open",open);
+   mobileNavToggle?.setAttribute("aria-expanded",open?"true":"false");
+   if(mobileNavToggle) mobileNavToggle.textContent=open?"×":"☰";
+ };
+ mobileNavToggle?.addEventListener("click",()=>{
+   setMobileNavState(!document.body.classList.contains("sidebar-mobile-open"));
+ });
+ mobileNavBackdrop?.addEventListener("click",()=>setMobileNavState(false));
+
  document.getElementById("sidebarToggle")?.addEventListener("click",()=>{
    if(window.innerWidth<=900){
-     document.body.classList.toggle("sidebar-mobile-open");
+     setMobileNavState(!document.body.classList.contains("sidebar-mobile-open"));
    }else{
      document.body.classList.toggle("sidebar-collapsed");
    }
