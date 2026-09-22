@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V29.8">
+  <meta name="dashboard-version" content="V29.9">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -2450,6 +2450,148 @@
 }
 
 </style>
+
+<style id="v299-responsive-equal-universes">
+/* =========================================================
+   V29.9 — RESPONSIVE MÓVIL + UNIVERSOS DE IGUAL ALTURA
+   ========================================================= */
+
+/* En escritorio ambos universos toman la altura del más grande.
+   El contenido sigue definiendo la altura: no se recorta ni se fuerza scroll. */
+@media (min-width:1001px){
+  .universe-dashboard-v291{
+    align-items:stretch !important;
+  }
+  .universe-dashboard-v291 .universe-block{
+    height:100% !important;
+    min-height:0 !important;
+    align-self:stretch !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  .universe-dashboard-v291 .universe-direction-card{
+    flex:0 0 auto !important;
+  }
+}
+
+/* Tablet / móvil: los universos se apilan y cada uno crece según su contenido. */
+@media (max-width:1000px){
+  .universe-dashboard-v291{
+    grid-template-columns:1fr !important;
+    gap:14px !important;
+  }
+  .universe-dashboard-v291 .universe-block{
+    width:100% !important;
+    height:auto !important;
+    align-self:auto !important;
+  }
+}
+
+@media (max-width:760px){
+  html,body{max-width:100%;overflow-x:hidden}
+  .app-shell{width:100%;min-width:0}
+  .main-content{padding:10px !important}
+
+  /* Cabecera institucional */
+  .top-header{
+    min-height:0 !important;
+    height:auto !important;
+    padding:12px 14px !important;
+    gap:10px !important;
+  }
+  .top-brand{align-items:flex-start !important;gap:10px !important}
+  .header-logo{width:min(230px,68vw) !important;max-width:68vw !important}
+  .header-title{min-width:0 !important}
+  .header-title h1{font-size:16px !important;line-height:1.15 !important}
+  .header-title p{font-size:9px !important;line-height:1.25 !important}
+  .report-date-v296{
+    width:100% !important;
+    max-width:none !important;
+    margin-left:0 !important;
+    padding:8px 0 0 !important;
+  }
+  .report-date-v296 .report-date-content{width:100% !important;min-width:0 !important}
+  .report-parish-row{width:100% !important}
+  .report-parish-row select{max-width:none !important;min-width:0 !important;width:100% !important}
+
+  /* PAC / Fuera del PAC */
+  .universe-dashboard-v291{gap:12px !important;margin-bottom:12px !important}
+  .universe-dashboard-v291 .universe-block{
+    padding:0 8px 10px !important;
+    border-radius:22px !important;
+    overflow:hidden !important;
+  }
+  .universe-dashboard-v291 .universe-heading{min-height:34px !important;height:34px !important}
+  .universe-dashboard-v291 .universe-heading h2,
+  .universe-dashboard-v291 .universe-out .universe-heading h2{font-size:17px !important}
+  .universe-dashboard-v291 .universe-top-kpis{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+    margin:0 2px 9px !important;
+  }
+  .universe-dashboard-v291 .universe-top-kpis .kpi-card{
+    min-height:142px !important;
+    height:142px !important;
+    padding:12px 6px 10px !important;
+  }
+  .universe-dashboard-v291 .universe-top-kpis .kpi-label{
+    min-height:25px !important;
+    font-size:8px !important;
+  }
+  .universe-dashboard-v291 .universe-top-kpis .kpi-card strong{font-size:38px !important;margin:7px 0 6px !important}
+  .universe-dashboard-v291 .universe-top-kpis .kpi-money{font-size:12px !important;overflow-wrap:anywhere}
+  .universe-dashboard-v291 .universe-top-kpis small{font-size:7.5px !important;text-align:center}
+  .universe-dashboard-v291 .universe-direction-card{
+    margin:0 2px !important;
+    padding:11px 8px 9px !important;
+    min-height:0 !important;
+  }
+  .universe-dashboard-v291 .universe-direction-card .kpi-label{font-size:10px !important}
+  .direction-row{min-width:0}
+
+  /* Gráficos */
+  .charts-top,.charts-three{grid-template-columns:1fr !important;gap:10px !important}
+  .charts-top .chart-card,.charts-top .chart-card:last-child{grid-column:auto !important;min-width:0}
+  .chart-card{padding:12px !important}
+  .chart-wrap{min-width:0 !important}
+
+  /* Mapa */
+  .map-card{padding:12px !important;margin-bottom:12px !important}
+  .map-card-head{gap:8px !important;margin-bottom:8px !important}
+  .map-shell{height:430px !important;min-height:430px !important}
+  .map-layer-control{max-width:calc(100% - 20px)}
+  .map-media-panel{left:8px !important;right:8px !important;bottom:8px !important;max-width:none !important}
+
+  /* Matriz: controles apilados y tabla desplazable horizontalmente */
+  .matrix-page{padding:10px !important}
+  .matrix-header{gap:10px !important}
+  .matrix-actions{display:flex !important;flex-wrap:wrap !important;gap:6px !important;width:100%}
+  .matrix-actions .matrix-btn{flex:1 1 auto}
+  .matrix-toolbar{grid-template-columns:1fr !important;gap:9px !important;padding:10px !important}
+  .matrix-card{max-width:100%;overflow:hidden !important}
+  .matrix-table-wrap{overflow-x:auto !important;-webkit-overflow-scrolling:touch}
+  #matrixDataPanel table{min-width:920px}
+  .matrix-pagination{grid-template-columns:1fr !important;gap:8px !important;text-align:center}
+  .matrix-page-size{justify-self:center !important}
+
+  /* Modales */
+  .modal-card,.crud-dialog{width:calc(100% - 16px) !important;margin:8px auto !important;max-height:calc(100vh - 16px) !important}
+  .modal-card{padding:18px 14px !important}
+  .detail-grid{grid-template-columns:1fr !important}
+  .detail.full{grid-column:auto !important}
+  .crud-form{padding:12px !important}
+  .crud-grid{grid-template-columns:1fr !important}
+  .crud-grid .span2,.crud-grid .span3{grid-column:auto !important}
+}
+
+/* Teléfonos angostos: se conserva la fila de dos KPIs mientras sea legible. */
+@media (max-width:390px){
+  .universe-dashboard-v291 .universe-top-kpis .kpi-card strong{font-size:34px !important}
+  .universe-dashboard-v291 .universe-top-kpis .kpi-money{font-size:10.5px !important}
+  .universe-dashboard-v291 .universe-top-kpis .kpi-label{font-size:7.4px !important}
+}
+</style>
+
 </head>
 <body class="sidebar-collapsed">
 
@@ -2527,7 +2669,7 @@
         <div class="universe-heading"><h2>FUERA DEL PAC</h2></div>
         <div class="universe-top-kpis">
           <article class="kpi-card kpi-otros universe-summary-card">
-            <span class="kpi-label">TOTAL</span><strong id="kpiOtros">—</strong>
+            <span class="kpi-label">TOTAL PROYECTOS</span><strong id="kpiOtros">—</strong>
             <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div><small id="pctOtros">Universo Fuera del PAC</small>
           </article>
           <article class="kpi-card kpi-oopp universe-delivered-card">
