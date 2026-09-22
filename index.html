@@ -4,12 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <title>Seguimiento de Proyectos | GADM Riobamba</title>
+  <meta name="dashboard-version" content="V29.8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Planificación, Hábitat y Desarrollo Urbanístico | GADM Riobamba</title>
   <link rel="icon" type="image/png" href="./assets/favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js"></script>
+  <script src="./google-maps-config.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css">
   <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
@@ -212,6 +217,8 @@
     body{overflow-x:hidden}
     .admin-sidebar{
       position:fixed;
+      display:flex;
+      flex-direction:column;
       left:0;
       top:0;
       bottom:0;
@@ -1379,130 +1386,1072 @@
     }
 
   
+    /* =========================================================
+       V25 - GOOGLE STREET VIEW
+       ========================================================= */
+    .streetview-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      min-height:28px;
+      padding:6px 9px;
+      border:1px solid #2463c7;
+      border-radius:6px;
+      background:#fff;
+      color:#1557b0;
+      font-size:9px;
+      font-weight:800;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .streetview-btn:hover{background:#eef5ff}
+    .streetview-btn:disabled{opacity:.45;cursor:not-allowed}
+
+    .streetview-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:3100;
+    }
+    .streetview-modal.open{display:block}
+    .streetview-backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(5,18,41,.82);
+    }
+    .streetview-dialog{
+      position:relative;
+      width:min(1180px,calc(100% - 28px));
+      height:min(780px,calc(100vh - 28px));
+      margin:14px auto;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 30px 100px rgba(0,0,0,.42);
+    }
+    .streetview-head{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+      padding:12px 15px;
+      border-bottom:1px solid #e1e7ef;
+    }
+    .streetview-head-copy{min-width:0}
+    .streetview-head strong{
+      display:block;
+      color:#0d2a5b;
+      font-size:13px;
+      line-height:1.3;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .streetview-head span{
+      display:block;
+      margin-top:3px;
+      color:#667085;
+      font-size:9px;
+    }
+    .streetview-close{
+      flex:0 0 auto;
+      border:0;
+      background:transparent;
+      color:#667085;
+      font-size:28px;
+      cursor:pointer;
+    }
+    .streetview-body{
+      position:relative;
+      flex:1;
+      min-height:0;
+      background:#e9eef5;
+    }
+    #streetViewPanorama{
+      width:100%;
+      height:100%;
+      min-height:420px;
+    }
+    .streetview-status{
+      position:absolute;
+      z-index:2;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      max-width:520px;
+      padding:15px 18px;
+      border-radius:9px;
+      background:rgba(255,255,255,.96);
+      color:#344054;
+      font-size:11px;
+      font-weight:700;
+      text-align:center;
+      box-shadow:0 8px 28px rgba(13,42,91,.16);
+    }
+    .streetview-status.error{
+      color:#9a2020;
+      border:1px solid #f2bbb7;
+      background:#fff4f3;
+    }
+    .streetview-footer{
+      flex:0 0 auto;
+      padding:8px 14px;
+      border-top:1px solid #e1e7ef;
+      color:#667085;
+      background:#fafbfd;
+      font-size:9px;
+    }
+    .popup-streetview-wrap{
+      margin-top:9px;
+      padding-top:8px;
+      border-top:1px solid #e4e9f1;
+    }
+    @media(max-width:760px){
+      .streetview-dialog{
+        width:calc(100% - 12px);
+        height:calc(100vh - 12px);
+        margin:6px auto;
+      }
+      #streetViewPanorama{min-height:320px}
+    }
+
+  
+    /* =========================================================
+       V26 - MULTIMEDIA: VIDEO PRIMERO + APERTURA DIRECTA
+       ========================================================= */
+    .map-media-list-item video{
+      width:100%;
+      height:150px;
+      display:block;
+      object-fit:cover;
+      background:#000;
+      pointer-events:none;
+    }
+    .map-media-list-item img{
+      height:150px;
+    }
+    .map-media-list-item{
+      min-height:100px;
+    }
+    .map-media-list-item::after{
+      content:"Abrir";
+      position:absolute;
+      left:50%;
+      bottom:8px;
+      transform:translateX(-50%);
+      padding:4px 8px;
+      border-radius:5px;
+      background:rgba(13,42,91,.88);
+      color:#fff;
+      font-size:8px;
+      font-weight:800;
+      opacity:0;
+      transition:opacity .15s ease;
+      pointer-events:none;
+    }
+    .map-media-list-item:hover::after{opacity:1}
+    .map-media-video-badge{
+      position:absolute;
+      left:7px;
+      bottom:7px;
+      z-index:2;
+      padding:4px 7px;
+      border-radius:5px;
+      background:rgba(185,28,28,.88);
+      color:#fff;
+      font-size:8px;
+      font-weight:900;
+      pointer-events:none;
+    }
+
+  
+    .header-title h1{white-space:normal!important;max-width:700px;line-height:1.08!important;font-size:25px!important}
+    .budget-reform-text{font-size:11px!important;margin-top:5px!important;color:#f4f7fb!important}
+    .report-edit-btn{
+      margin-top:7px;padding:4px 9px;border:1px solid rgba(255,255,255,.5);
+      border-radius:5px;background:rgba(255,255,255,.08);color:#fff;
+      font-size:9px;font-weight:800;cursor:pointer
+    }
+    .report-edit-btn:hover{background:rgba(255,255,255,.16)}
+
+
+    /* V27.2 - FILTROS DE MATRIZ EN UNA SOLA FILA */
+    .matrix-toolbar{
+      display:grid !important;
+      grid-template-columns:minmax(120px,.85fr) minmax(135px,.95fr) minmax(135px,.95fr) minmax(150px,1.05fr) minmax(220px,1.45fr) minmax(150px,1fr) auto !important;
+      gap:10px !important;
+      align-items:end !important;
+      padding:12px 14px !important;
+    }
+    .matrix-toolbar label{min-width:0 !important}
+    .matrix-toolbar select,.matrix-toolbar input{width:100% !important;min-width:0 !important}
+    .matrix-clear{align-self:end !important;justify-self:stretch !important;white-space:nowrap;min-width:130px}
+    @media(max-width:1250px){
+      .matrix-toolbar{
+        grid-template-columns:minmax(110px,.8fr) minmax(120px,.9fr) minmax(120px,.9fr) minmax(135px,1fr) minmax(190px,1.35fr) minmax(135px,.95fr) auto !important;
+        gap:8px !important;
+      }
+      .matrix-toolbar label{font-size:10px !important}
+      .matrix-toolbar select,.matrix-toolbar input,.matrix-clear{height:36px !important;font-size:10px !important}
+    }
+    @media(max-width:980px){
+      .matrix-toolbar{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+      .matrix-clear{justify-self:start !important;width:auto !important}
+    }
+    @media(max-width:620px){
+      .matrix-toolbar{grid-template-columns:1fr !important}
+      .matrix-clear{width:100% !important}
+    }
+
+
+    /* V28 - campos personalizados */
+    .custom-fields-form-section{border-top:1px solid #e1e7ef;margin-top:6px;padding-top:16px}
+    .custom-fields-form-section h4{margin:0 0 4px;color:#0d2a5b;font-size:13px}
+    .custom-fields-form-section p{margin:0 0 12px;color:#667085;font-size:10px}
+    .custom-fields-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .custom-field-empty{grid-column:1/-1;padding:12px;border:1px dashed #cbd5e1;border-radius:7px;background:#f8fafc;color:#667085;font-size:10px}
+    .custom-check{display:flex;align-items:center;gap:8px;color:#344054;font-size:11px;font-weight:700;min-height:38px}
+    .custom-check input{accent-color:#0d2a5b}
+    .custom-field-existing-list{display:grid;gap:6px;max-height:180px;overflow:auto}
+    .custom-field-existing-item{display:grid;grid-template-columns:minmax(160px,1fr) minmax(130px,auto) auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #e1e7ef;border-radius:7px;background:#f9fbfd;font-size:10px}
+    .custom-field-existing-item strong{color:#203858}.custom-field-existing-item span{color:#667085}
+    .custom-field-cell{min-width:140px;max-width:260px;white-space:pre-line;overflow-wrap:anywhere}
+    .matrix-table{min-width:1750px!important}
+    .matrix-toolbar{
+      grid-template-columns:minmax(110px,.7fr) minmax(120px,.8fr) minmax(120px,.8fr) minmax(130px,.85fr) minmax(180px,1.2fr) minmax(145px,.9fr) minmax(145px,.9fr) minmax(140px,.85fr) auto!important;
+      overflow-x:auto
+    }
+    @media(max-width:900px){.custom-fields-form-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:620px){.custom-fields-form-grid{grid-template-columns:1fr}}
+
+
+    /* V28.1 - estado seguro de módulos opcionales */
+    #addCustomFieldBtn:disabled{
+      opacity:.48;
+      cursor:not-allowed;
+      filter:grayscale(.25);
+    }
+
+    .custom-field-edit-btn{padding:6px 10px!important;min-height:30px!important}
 
     /* =========================================================
-       V29 MOBILE - ADAPTACIÓN RESPONSIVE
-       Mantiene intacta la experiencia de escritorio.
+       V28.4 - MATRIZ AJUSTADA AL ANCHO DE PANTALLA
        ========================================================= */
-    .mobile-nav-trigger{display:none}
-
-    @media (max-width:900px){
-      .mobile-nav-trigger{
-        display:grid;place-items:center;position:fixed;left:12px;top:12px;z-index:1350;
-        width:42px;height:42px;border:1px solid rgba(255,255,255,.32);border-radius:10px;
-        background:#0d2a5b;color:#fff;box-shadow:0 6px 18px rgba(13,42,91,.28);
-        font-size:20px;cursor:pointer
-      }
-      body.sidebar-mobile-open .mobile-nav-trigger{left:240px;background:#fff;color:#0d2a5b;border-color:#d8e0eb}
-      body.sidebar-mobile-open:after{
-        content:"";position:fixed;inset:0;z-index:1150;background:rgba(7,23,50,.42)
-      }
-      .admin-sidebar{z-index:1300}
-      .top-header{padding-left:68px}
-      .matrix-page{padding-top:68px}
+    #matrixDataPanel{
+      width:100%;
+      max-width:100%;
+      min-width:0;
     }
 
-    @media (max-width:760px){
-      body{font-size:14px}
-      .top-header{
-        min-height:0;height:auto;padding:66px 16px 20px;gap:16px;align-items:stretch
-      }
-      .top-header:after{width:100%;height:5px}
-      .top-brand{display:block}
-      .header-logo{width:min(270px,78vw);max-width:none;max-height:68px;margin-bottom:15px}
-      .header-title h1{font-size:24px;line-height:1.08;margin-bottom:7px}
-      .header-title p{font-size:12px;line-height:1.35}
-      .report-date{min-width:0;width:100%;padding:12px 0 4px;border-left:0;border-top:1px solid rgba(255,255,255,.18)}
-      .report-date svg{width:23px;height:23px}
-      .report-date span{font-size:10px}.report-date strong{font-size:13px}
-      .main-content{padding:12px}
-
-      .dashboard-toolbar{margin-bottom:12px;padding:12px;gap:8px}
-      .dashboard-toolbar label{font-size:9px}
-      .dashboard-toolbar select{width:100%;font-size:13px}
-      .dashboard-filter-summary{font-size:9px;line-height:1.35}
-
-      .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-      .kpi-card{min-height:145px;padding:17px 10px 13px;border-radius:10px}
-      .kpi-label{font-size:10px;line-height:1.2;min-height:24px;display:flex;align-items:center;justify-content:center}
-      .kpi-card strong{font-size:38px;margin:8px 0 5px}
-      .kpi-money{font-size:12px;margin-bottom:8px;overflow-wrap:anywhere}
-      .kpi-separator{margin-bottom:7px}
-      .kpi-card small{font-size:9px;line-height:1.2}
-
-      .charts-top.charts-three{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px}
-      .charts-top.charts-three .chart-top-card{height:330px;padding:14px 12px}
-      .charts-top.charts-three .chart-wrap{height:270px}
-      .chart-card h2{font-size:11px;line-height:1.3}
-      .chart-note{font-size:9px}
-      .parish-project-list{height:270px}
-
-      .map-card{padding:13px 10px 12px;margin-bottom:12px}
-      .map-card-head{gap:8px;margin-bottom:10px}
-      .map-card h2{font-size:11px;line-height:1.3}
-      .map-card p{font-size:9px;line-height:1.4}
-      #projectsMap{height:440px;border-radius:8px}
-      .map-count{font-size:9px;white-space:normal}
-      .map-layer-control{left:8px;top:8px;min-width:125px;padding:7px 8px}
-      .map-media-panel{max-width:calc(100% - 16px)!important;width:calc(100% - 16px)!important;right:8px!important}
-
-      footer{font-size:8px;line-height:1.35}
-
-      .matrix-page{padding:66px 10px 16px}
-      .matrix-header{gap:12px;margin-bottom:12px}
-      .matrix-header h2{font-size:19px}
-      .matrix-header p{font-size:10px;line-height:1.4}
-      .matrix-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:7px}
-      .matrix-actions .matrix-btn{width:100%;padding:0 8px;font-size:9px}
-      .matrix-actions .connection-badge{grid-column:1/-1;justify-content:center}
-
-      .matrix-card{border-radius:10px;overflow:visible;background:transparent;border:0;box-shadow:none}
-      .matrix-toolbar{grid-template-columns:1fr!important;gap:9px;padding:12px;border:1px solid #dde3ec;border-radius:10px;background:#fff;margin-bottom:10px}
-      .matrix-toolbar label{font-size:10px}
-      .matrix-toolbar select,.matrix-toolbar input,.matrix-search{width:100%;font-size:12px}
-      .matrix-scroll{overflow:visible}
-      .matrix-table{display:block;min-width:0;width:100%;font-size:11px}
-      .matrix-table thead{display:none}
-      .matrix-table tbody{display:grid;gap:10px}
-      .matrix-table tr{display:block;background:#fff;border:1px solid #dce3ed;border-radius:10px;overflow:hidden;box-shadow:0 4px 14px rgba(13,42,91,.06)}
-      .matrix-table td{
-        display:grid;grid-template-columns:105px minmax(0,1fr);gap:10px;align-items:start;
-        max-width:none!important;min-width:0!important;padding:9px 11px;border-right:0;border-bottom:1px solid #edf0f5;
-        background:#fff!important;white-space:normal!important;line-height:1.35
-      }
-      .matrix-table td:last-child{border-bottom:0}
-      .matrix-table td:before{content:attr(data-label);font-size:9px;font-weight:800;color:#667085;text-transform:uppercase;line-height:1.35}
-      .matrix-project,.matrix-description{max-width:none!important;min-width:0!important}
-      .matrix-actions-cell{display:flex!important;flex-wrap:wrap;gap:4px;padding:10px 11px!important}
-      .matrix-actions-cell:before{content:"Acciones";width:100%;font-size:9px;font-weight:800;color:#667085;text-transform:uppercase}
-      .row-action{font-size:10px;padding:7px 6px;background:#f5f7fb;border-radius:5px}
-      .matrix-status-pill,.matrix-category{font-size:10px;width:max-content;max-width:100%;white-space:normal;text-align:center}
-      .matrix-pagination-row{flex-direction:column;gap:9px;align-items:center!important}
-      .matrix-pagination{max-width:100%;overflow-x:auto;padding-bottom:3px}
-
-      .crud-dialog{width:calc(100% - 16px);max-height:calc(100dvh - 16px);margin:8px auto;border-radius:10px}
-      .crud-form{padding:12px}.crud-head{padding:12px 14px}
-      .crud-grid{grid-template-columns:1fr!important;gap:10px}
-      .crud-grid .span2,.crud-grid .span3{grid-column:auto!important}
-      .crud-foot{position:sticky;bottom:0;background:#fff;padding:12px 0 2px;display:grid;grid-template-columns:1fr 1fr}
-      .field-control{font-size:13px}
-      .modal-card{width:calc(100% - 16px);max-height:calc(100dvh - 16px);margin:8px auto;padding:18px 14px}
-      .detail-grid{grid-template-columns:1fr}
-      .detail.full{grid-column:auto}
+    #matrixDataPanel .matrix-table-wrap{
+      width:100%;
+      max-width:100%;
+      overflow-x:hidden !important;
     }
 
-    @media (max-width:430px){
-      .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
-      .kpi-card{min-height:138px;padding-left:7px;padding-right:7px}
-      .kpi-card strong{font-size:34px}
-      .kpi-money{font-size:11px}
-      .matrix-table td{grid-template-columns:92px minmax(0,1fr);padding:8px 9px}
-      #projectsMap{height:400px}
+    #matrixDataPanel .matrix-table{
+      width:100% !important;
+      min-width:0 !important;
+      max-width:100% !important;
+      table-layout:fixed !important;
     }
+
+    #matrixDataPanel .matrix-table th,
+    #matrixDataPanel .matrix-table td{
+      min-width:0 !important;
+      max-width:none !important;
+      padding:7px 5px !important;
+      font-size:9px !important;
+      line-height:1.22 !important;
+      white-space:normal !important;
+      overflow-wrap:anywhere !important;
+      word-break:normal !important;
+      vertical-align:top !important;
+    }
+
+    /* Dar más espacio a Proyecto y menos a columnas cortas */
+    #matrixDataPanel .matrix-table th:nth-child(1),
+    #matrixDataPanel .matrix-table td:nth-child(1){width:3.5% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(2),
+    #matrixDataPanel .matrix-table td:nth-child(2){width:17% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(3),
+    #matrixDataPanel .matrix-table td:nth-child(3){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(4),
+    #matrixDataPanel .matrix-table td:nth-child(4){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(5),
+    #matrixDataPanel .matrix-table td:nth-child(5){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(6),
+    #matrixDataPanel .matrix-table td:nth-child(6){width:8% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(7),
+    #matrixDataPanel .matrix-table td:nth-child(7){width:10% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(8),
+    #matrixDataPanel .matrix-table td:nth-child(8){width:8% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(9),
+    #matrixDataPanel .matrix-table td:nth-child(9){width:7% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(10),
+    #matrixDataPanel .matrix-table td:nth-child(10){width:5% !important;}
+
+    #matrixDataPanel .matrix-table th:nth-child(11),
+    #matrixDataPanel .matrix-table td:nth-child(11){width:7% !important;}
+
+    #matrixDataPanel .matrix-actions-cell{
+      width:7.5% !important;
+      white-space:normal !important;
+    }
+
+    #matrixDataPanel .matrix-actions-cell .matrix-btn,
+    #matrixDataPanel .matrix-actions-cell button{
+      padding:5px 6px !important;
+      min-width:0 !important;
+      font-size:8px !important;
+      margin:1px !important;
+    }
+
+    #matrixDataPanel .custom-field-cell{
+      min-width:0 !important;
+      max-width:none !important;
+    }
+
+    /* Encabezados compactos para ganar espacio sin perder legibilidad */
+    #matrixDataPanel .matrix-table thead th{
+      font-size:8.5px !important;
+      line-height:1.15 !important;
+      padding:7px 4px !important;
+    }
+
+    @media (max-width:1200px){
+      #matrixDataPanel .matrix-table th,
+      #matrixDataPanel .matrix-table td{
+        font-size:8px !important;
+        padding:6px 3px !important;
+      }
+      #matrixDataPanel .matrix-table thead th{
+        font-size:7.5px !important;
+      }
+    }
+
+
+    /* V28.5 - Estados más compactos dentro de la Matriz */
+    #matrixDataPanel .status-pill,
+    #matrixDataPanel .state-pill,
+    #matrixDataPanel .status-badge,
+    #matrixDataPanel [class*="status-"],
+    #matrixDataPanel [class*="state-"]{
+      font-size:7.5px !important;
+      line-height:1.05 !important;
+      padding:4px 5px !important;
+      min-height:0 !important;
+      border-radius:4px !important;
+    }
+
+    /* La columna Estado ocupa un poco menos de espacio */
+    #matrixDataPanel .matrix-table th:nth-child(8),
+    #matrixDataPanel .matrix-table td:nth-child(8){
+      width:6.5% !important;
+      padding-left:4px !important;
+      padding-right:4px !important;
+    }
+
+    #matrixDataPanel .matrix-table td:nth-child(8) > *{
+      max-width:100% !important;
+    }
+
+
+    /* V28.6 — Filas traslúcidas por estado */
+    #matrixDataPanel .matrix-table tbody tr.project-status-row td:nth-child(8) span{
+      background:transparent !important;
+      border:0 !important;
+      box-shadow:none !important;
+      padding:0 !important;
+      border-radius:0 !important;
+      min-width:0 !important;
+      max-width:100% !important;
+      color:#183153 !important;
+      font-size:8px !important;
+      font-weight:700 !important;
+      line-height:1.15 !important;
+      white-space:normal !important;
+    }
+    #matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td{
+      background-color:rgba(15,157,88,.10) !important;
+    }
+    #matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td{
+      background-color:rgba(18,62,120,.075) !important;
+    }
+    #matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td{
+      background-color:rgba(220,53,69,.075) !important;
+    }
+    #matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td{
+      background-color:rgba(245,158,11,.10) !important;
+    }
+
+
+    /* =========================================================
+       V29 — REORGANIZACIÓN VISUAL, FILTROS MÚLTIPLES Y UNIVERSOS
+       ========================================================= */
+    .sidebar-session-foot{
+      margin-top:auto;
+      display:flex !important;
+      flex-direction:column;
+      gap:10px;
+      padding:10px;
+    }
+    .sidebar-logout-btn{
+      width:100%;
+      min-height:40px;
+      border:1px solid rgba(255,255,255,.28);
+      border-radius:8px;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      font:700 11px Arial,sans-serif;
+      cursor:pointer;
+    }
+    .sidebar-logout-btn:hover{background:rgba(255,255,255,.15)}
+    .sidebar-logout-icon{font-size:20px;line-height:1;transform:rotate(180deg)}
+    .sidebar-institution{font-size:9px;line-height:1.35;color:rgba(255,255,255,.65);text-align:center}
+    body.sidebar-collapsed .sidebar-session-foot{
+      display:flex !important;
+      padding:8px;
+    }
+    body.sidebar-collapsed .sidebar-institution{display:none}
+    body.sidebar-collapsed .sidebar-logout-btn{
+      width:42px;
+      height:42px;
+      min-height:42px;
+      padding:0;
+      border-radius:8px;
+    }
+    body.sidebar-collapsed .sidebar-logout-btn .side-text{display:none}
+    body.sidebar-collapsed .sidebar-logout-icon{font-size:22px}
+
+    .matrix-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    #dbConnectionBadge,#matrixLogoutBtn{display:none !important}
+
+    .matrix-toolbar-v29{
+      display:grid !important;
+      grid-template-columns:minmax(240px,1.45fr) minmax(180px,1fr) minmax(190px,1.05fr) minmax(170px,.9fr) auto !important;
+      gap:10px !important;
+      overflow:visible !important;
+      align-items:end !important;
+    }
+    .multi-filter{position:relative;min-width:0}
+    .multi-filter-label{display:block;margin-bottom:5px;font-size:10px;font-weight:700;color:#203858}
+    .multi-filter-btn{
+      width:100%;height:38px;border:1px solid #cbd6e5;border-radius:6px;background:#fff;color:#203858;
+      padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+      font:700 10px Arial,sans-serif;cursor:pointer;text-align:left
+    }
+    .multi-filter-btn:disabled{background:#f4f6f9;color:#98a2b3;cursor:not-allowed}
+    .multi-count{
+      min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#123e78;color:#fff;
+      display:inline-flex;align-items:center;justify-content:center;font-size:9px
+    }
+    .multi-filter-popover{
+      position:absolute;z-index:90;top:calc(100% + 5px);left:0;width:max-content;min-width:230px;max-width:360px;
+      max-height:360px;overflow:auto;background:#fff;border:1px solid #d7e0eb;border-radius:8px;
+      box-shadow:0 12px 28px rgba(16,39,75,.18);padding:8px
+    }
+    .multi-option{display:flex!important;align-items:center!important;gap:8px!important;padding:7px 8px!important;margin:0!important;border-radius:5px;font-size:10px!important;font-weight:600!important;cursor:pointer}
+    .multi-option:hover{background:#f2f6fb}
+    .multi-option input{width:14px!important;height:14px!important;min-width:14px!important;margin:0!important;accent-color:#123e78}
+    .multi-value-group{padding:5px 0 8px;border-bottom:1px solid #edf1f6}
+    .multi-value-group:last-child{border-bottom:0}
+    .multi-value-group>strong{display:block;padding:4px 8px;color:#123e78;font-size:10px;text-transform:uppercase}
+    .multi-empty{padding:12px;color:#667085;font-size:10px}
+    .legacy-matrix-filters{display:none!important}
+
+    .universe-dashboard{display:grid;gap:18px;margin-bottom:20px}
+    .universe-block{
+      background:#fff;border:1px solid #dce4ee;border-radius:12px;padding:14px 16px 16px;
+      box-shadow:0 4px 12px rgba(16,39,75,.04)
+    }
+    .universe-pac{border-top:4px solid var(--blue)}
+    .universe-out{border-top:4px solid var(--red)}
+    .universe-heading{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .universe-heading h2{margin:0;color:var(--navy);font-size:14px}
+    .universe-number{font-size:9px;font-weight:800;letter-spacing:.6px;padding:4px 7px;border-radius:4px;background:#edf3fb;color:#123e78}
+    .universe-grid{display:grid;grid-template-columns:.8fr 1.7fr .9fr;gap:14px}
+    .universe-grid .kpi-card{margin:0;min-height:190px;padding:18px 14px}
+    .universe-grid .kpi-card strong{font-size:42px;margin:10px 0 6px}
+    .universe-direction-card:before{background:#6b7f9d}
+    .direction-breakdown{width:100%;display:grid;gap:8px;margin-top:10px;max-height:145px;overflow:auto;padding-right:3px}
+    .direction-item{display:grid;gap:3px}
+    .direction-row,.direction-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .direction-row strong{font-size:9px!important;margin:0!important;color:#203858!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .direction-row span{font-size:9px;font-weight:800;color:#123e78}
+    .direction-bar{height:5px;background:#edf1f6;border-radius:4px;overflow:hidden}
+    .direction-bar i{display:block;height:100%;background:#2468c9;border-radius:4px}
+    .universe-out .direction-bar i{background:#d64a4f}
+    .direction-meta{font-size:8.5px;color:#667085}
+    .direction-meta b{color:#203858}
+    .direction-empty{font-size:10px;color:#667085;padding:18px 8px;text-align:center}
+
+    @media(max-width:1150px){
+      .matrix-toolbar-v29{grid-template-columns:1.2fr 1fr 1fr 1fr auto!important}
+      .universe-grid{grid-template-columns:1fr 1.4fr}
+      .universe-delivered-card{grid-column:1/-1}
+    }
+    @media(max-width:760px){
+      .matrix-toolbar-v29{grid-template-columns:1fr!important}
+      .universe-grid{grid-template-columns:1fr}
+      .universe-delivered-card{grid-column:auto}
+    }
+
+
+/* V29.1 — KPIs en dos universos lado a lado */
+.universe-dashboard-v291{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:stretch;margin-bottom:20px}
+.universe-dashboard-v291 .universe-block{min-width:0;padding:0 12px 14px!important;border:2px solid #176889!important;border-radius:34px!important;background:#fff;overflow:hidden}
+.universe-dashboard-v291 .universe-out{border-color:#ef2020!important}
+.universe-dashboard-v291 .universe-heading{height:48px;margin:0!important;display:flex;align-items:center;justify-content:center}
+.universe-dashboard-v291 .universe-heading h2{margin:0!important;font-size:24px!important;line-height:1!important;color:#176889!important;text-align:center}
+.universe-dashboard-v291 .universe-out .universe-heading h2{color:#d60000!important}
+.universe-dashboard-v291 .universe-top-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 6px 12px}
+.universe-dashboard-v291 .universe-top-kpis .kpi-card{min-height:128px!important;padding:13px 10px 11px!important;border-radius:8px!important;box-shadow:0 2px 7px rgba(16,39,75,.10)!important}
+.universe-dashboard-v291 .universe-top-kpis .kpi-card strong{font-size:30px!important;margin:7px 0 4px!important;line-height:1!important}
+.universe-dashboard-v291 .universe-top-kpis .kpi-label{font-size:9px!important;line-height:1.2!important}
+.universe-dashboard-v291 .universe-top-kpis .kpi-money{font-size:13px!important}
+.universe-dashboard-v291 .universe-top-kpis small{font-size:8px!important}
+.universe-dashboard-v291 .universe-direction-card{min-height:130px!important;margin:0 6px!important;padding:14px 10px 10px!important;border-radius:8px!important;box-shadow:0 2px 7px rgba(16,39,75,.10)!important}
+.universe-dashboard-v291 .universe-direction-card .kpi-label{display:block;text-align:center;font-size:11px!important;color:#0d2f62!important}
+.universe-dashboard-v291 .direction-breakdown{max-height:95px!important;margin-top:9px!important}
+@media(max-width:1000px){.universe-dashboard-v291{grid-template-columns:1fr!important}}
+@media(max-width:520px){.universe-dashboard-v291 .universe-top-kpis{grid-template-columns:1fr}.universe-dashboard-v291 .universe-heading h2{font-size:20px!important}}
+
+
+    /* =========================================================
+       V29.2 — KPIs SUPERIORES EN UNA SOLA FILA + ENCABEZADOS
+       ========================================================= */
+
+    .universe-dashboard-v291 .universe-block{
+      position:relative;
+      padding-top:0 !important;
+      overflow:hidden;
+    }
+
+    .universe-dashboard-v291 .universe-heading{
+      min-height:54px !important;
+      margin:0 -14px 14px !important;
+      padding:0 18px !important;
+      border-radius:31px 31px 0 0;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .universe-dashboard-v291 .universe-pac .universe-heading{
+      background:linear-gradient(135deg,#0d315f 0%,#176f9a 100%);
+      box-shadow:inset 0 -1px 0 rgba(255,255,255,.18);
+    }
+
+    .universe-dashboard-v291 .universe-out .universe-heading{
+      background:linear-gradient(135deg,#a9141c 0%,#e72d35 100%);
+      box-shadow:inset 0 -1px 0 rgba(255,255,255,.18);
+    }
+
+    .universe-dashboard-v291 .universe-heading::after{
+      content:"";
+      position:absolute;
+      left:12%;
+      right:12%;
+      bottom:0;
+      height:3px;
+      background:rgba(255,255,255,.42);
+      border-radius:3px 3px 0 0;
+    }
+
+    .universe-dashboard-v291 .universe-heading h2,
+    .universe-dashboard-v291 .universe-out .universe-heading h2{
+      position:relative;
+      z-index:1;
+      color:#fff !important;
+      font-size:21px !important;
+      font-weight:800 !important;
+      letter-spacing:.8px;
+      text-shadow:0 1px 2px rgba(0,0,0,.18);
+    }
+
+    /* Siempre dos KPIs en una misma fila dentro de cada universo */
+    .universe-dashboard-v291 .universe-top-kpis{
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      gap:9px !important;
+      align-items:stretch;
+    }
+
+    .universe-dashboard-v291 .universe-top-kpis > .kpi-card{
+      width:auto !important;
+      min-width:0 !important;
+      grid-column:auto !important;
+      margin:0 !important;
+    }
+
+    /* Anula la regla V29 que hacía que Entregados ocupara toda la fila */
+    .universe-dashboard-v291 .universe-delivered-card{
+      grid-column:auto !important;
+    }
+
+    @media(max-width:1150px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      }
+      .universe-dashboard-v291 .universe-delivered-card{
+        grid-column:auto !important;
+      }
+    }
+
+    /* Solo en pantallas realmente pequeñas se apilan */
+    @media(max-width:560px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:1fr !important;
+      }
+    }
+
+
+    /* V29.3 — Encabezados de universos más compactos */
+    .universe-dashboard-v291 .universe-heading{
+      min-height:38px !important;
+      height:38px !important;
+      margin:0 -14px 10px !important;
+      padding:0 14px !important;
+      border-radius:30px 30px 0 0 !important;
+    }
+
+    .universe-dashboard-v291 .universe-heading h2,
+    .universe-dashboard-v291 .universe-out .universe-heading h2{
+      font-size:16px !important;
+      line-height:1 !important;
+      letter-spacing:.5px !important;
+      font-weight:800 !important;
+    }
+
+    .universe-dashboard-v291 .universe-heading::after{
+      left:18% !important;
+      right:18% !important;
+      height:2px !important;
+    }
+
+    /* Reduce ligeramente el peso visual del fondo sin perder identidad */
+    .universe-dashboard-v291 .universe-pac .universe-heading{
+      background:linear-gradient(135deg,#173f6e 0%,#24779a 100%) !important;
+    }
+
+    .universe-dashboard-v291 .universe-out .universe-heading{
+      background:linear-gradient(135deg,#b52a31 0%,#e2474d 100%) !important;
+    }
+
+    @media(max-width:520px){
+      .universe-dashboard-v291 .universe-heading{
+        min-height:36px !important;
+        height:36px !important;
+      }
+      .universe-dashboard-v291 .universe-heading h2,
+      .universe-dashboard-v291 .universe-out .universe-heading h2{
+        font-size:15px !important;
+      }
+    }
+
+
+    /* =========================================================
+       V29.8 — KPIs MÁS PROTAGÓNICOS SIN CAMBIAR SU ANCHO
+       ========================================================= */
+
+    /* Mantiene dos tarjetas en una sola fila y exactamente el mismo ancho */
+    .universe-dashboard-v291 .universe-top-kpis{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      gap:9px !important;
+    }
+
+    /* Aumentamos solo la altura para dar aire a la información */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-card{
+      min-height:162px !important;
+      height:162px !important;
+      padding:15px 10px 13px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:flex-start !important;
+    }
+
+    /* Títulos algo más visibles, pero secundarios al número */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-label{
+      min-height:24px !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      font-size:10px !important;
+      line-height:1.15 !important;
+      font-weight:800 !important;
+      text-align:center !important;
+    }
+
+    /* Número principal: protagonista */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-card strong{
+      font-size:46px !important;
+      line-height:.95 !important;
+      margin:8px 0 7px !important;
+      font-weight:800 !important;
+      letter-spacing:-1px !important;
+    }
+
+    /* Monto: más grande para que se lea claramente */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-money{
+      font-size:16px !important;
+      line-height:1.1 !important;
+      font-weight:800 !important;
+      margin-bottom:8px !important;
+    }
+
+    /* Separador y porcentaje alineados hacia la parte inferior */
+    .universe-dashboard-v291 .universe-top-kpis .kpi-separator{
+      width:72% !important;
+      margin-top:auto !important;
+      margin-bottom:7px !important;
+    }
+
+    .universe-dashboard-v291 .universe-top-kpis small{
+      font-size:8.5px !important;
+      line-height:1.15 !important;
+      min-height:10px !important;
+    }
+
+    /* No permitir que Entregados salte a otra fila */
+    .universe-dashboard-v291 .universe-delivered-card{
+      grid-column:auto !important;
+    }
+
+    @media(max-width:1150px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      }
+      .universe-dashboard-v291 .universe-top-kpis .kpi-card{
+        min-height:155px !important;
+        height:155px !important;
+      }
+      .universe-dashboard-v291 .universe-top-kpis .kpi-card strong{
+        font-size:42px !important;
+      }
+      .universe-dashboard-v291 .universe-top-kpis .kpi-money{
+        font-size:14px !important;
+      }
+    }
+
+    @media(max-width:560px){
+      .universe-dashboard-v291 .universe-top-kpis{
+        grid-template-columns:1fr !important;
+      }
+    }
+
+
+/* V29.8 */
+.header-controls{margin-left:auto;display:flex;align-items:center;gap:14px;min-width:0}
+.header-parish-filter{display:grid;grid-template-columns:auto minmax(170px,230px);align-items:center;gap:3px 8px;color:#fff}
+.header-parish-filter>span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.25px}
+.header-parish-filter select{height:34px;min-width:0;border:1px solid rgba(255,255,255,.38);border-radius:7px;background:#fff;color:#17365f;padding:0 30px 0 10px;font-size:11px;font-weight:700}
+.header-parish-filter small{grid-column:1/-1;text-align:right;font-size:7.5px;line-height:1.1;color:rgba(255,255,255,.76);white-space:nowrap}
+.report-date-content>strong:first-child{font-size:12px!important}
+@media(max-width:1050px){.header-parish-filter small{display:none}.header-parish-filter{grid-template-columns:1fr}.header-parish-filter>span{display:none}.header-controls{gap:8px}.header-parish-filter select{max-width:190px}}
+
+/* Inversión por Dirección: sin scroll y altura automática */
+.universe-dashboard-v291 .universe-block{height:auto!important;min-height:0!important;align-self:start!important}
+.universe-dashboard-v291 .universe-direction-card{height:auto!important;min-height:130px!important;max-height:none!important;overflow:visible!important}
+.universe-dashboard-v291 .direction-breakdown{height:auto!important;max-height:none!important;overflow:visible!important;overflow-y:visible!important;padding-right:0!important}
+.universe-dashboard-v291 .direction-breakdown::-webkit-scrollbar{display:none!important}
+
+/* Matriz: ninguna fila completa recibe color */
+#matrixDataPanel tr.project-status-row > td{background-color:#fff!important}
+#matrixDataPanel tr.project-status-row:nth-child(even) > td{background-color:#f8fafc!important}
+
+/* Solo ESTADO: negrita + fondo más intenso */
+#matrixDataPanel tr.project-status-row > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row:nth-child(even) > td.matrix-status-cell{font-weight:800!important}
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td.matrix-status-cell{background:#bfe8d5!important;color:#075c39!important}
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td.matrix-status-cell{background:#d6e4f2!important;color:#173f6e!important}
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell{background:#f3c9cd!important;color:#9c2530!important}
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell{background:#f6d8ad!important;color:#85500b!important}
+#matrixDataPanel td.matrix-status-cell .matrix-status-pill{font-weight:800!important;color:inherit!important;background:transparent!important;border:0!important;box-shadow:none!important}
+
+
+/* =========================================================
+   V29.8 — ESTADO SOLO EN TEXTO + PARROQUIA BAJO REFORMA
+   ========================================================= */
+
+/* Recupera espacio del título: el bloque derecho vuelve a ser compacto */
+.report-date-v296{
+  margin-left:auto !important;
+  flex:0 0 auto !important;
+  max-width:330px !important;
+  align-items:flex-start !important;
+}
+.report-date-v296 .report-date-content{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:2px !important;
+  min-width:250px;
+}
+.report-parish-row{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:5px;
+  width:100%;
+}
+.report-parish-row>span{
+  font-size:9px;
+  line-height:1;
+  font-weight:800;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.82);
+}
+.report-parish-row select{
+  height:29px;
+  flex:1;
+  min-width:155px;
+  max-width:230px;
+  padding:0 26px 0 8px;
+  border:1px solid rgba(255,255,255,.38);
+  border-radius:6px;
+  background:#fff;
+  color:#17365f;
+  font-size:10px;
+  font-weight:700;
+}
+.report-date-v296 #dashboardFilterSummary{
+  width:100%;
+  margin:1px 0 3px;
+  text-align:right;
+  color:rgba(255,255,255,.70);
+  font-size:7px;
+  line-height:1.1;
+  white-space:nowrap;
+}
+.report-date-v296 .report-edit-btn{
+  margin-top:1px !important;
+}
+
+/* MATRIZ: elimina cualquier fondo de estado. Conserva solo zebra normal */
+#matrixDataPanel tr.project-status-row > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row:nth-child(even) > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status] > td.matrix-status-cell{
+  background-color:inherit !important;
+  font-weight:800 !important;
+}
+
+/* El estado se destaca ÚNICAMENTE por el texto, con colores más vibrantes */
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td.matrix-status-cell .matrix-status-pill{
+  color:#009447 !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td.matrix-status-cell .matrix-status-pill{
+  color:#0067d9 !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell .matrix-status-pill{
+  color:#e00016 !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell .matrix-status-pill{
+  color:#e66b00 !important;
+}
+#matrixDataPanel td.matrix-status-cell .matrix-status-pill{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  font-weight:800 !important;
+}
+
+@media(max-width:900px){
+  .report-date-v296{max-width:280px !important}
+  .report-date-v296 .report-date-content{min-width:210px}
+  .report-date-v296 #dashboardFilterSummary{display:none}
+}
+
+
+/* =========================================================
+   V29.8 — EDITAR COMPACTO + ESTADOS COMO BADGES
+   ========================================================= */
+.report-date-edit-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.report-date-edit-row #reportCutText{
+  margin:0 !important;
+}
+.report-edit-icon{
+  width:24px !important;
+  min-width:24px !important;
+  height:24px !important;
+  min-height:24px !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(255,255,255,.52) !important;
+  border-radius:6px !important;
+  background:rgba(255,255,255,.08) !important;
+  color:#fff !important;
+  font-size:15px !important;
+  line-height:1 !important;
+  cursor:pointer;
+}
+.report-edit-icon:hover{
+  background:rgba(255,255,255,.18) !important;
+}
+
+/* Forzar que la celda Estado conserve SOLO el fondo normal/zebra de la tabla */
+#matrixDataPanel tbody tr.project-status-row > td.matrix-status-cell,
+#matrixDataPanel tbody tr.project-status-row[data-project-status] > td.matrix-status-cell{
+  background:#fff !important;
+  color:#0b2d55 !important;
+  font-weight:400 !important;
+}
+#matrixDataPanel tbody tr.project-status-row:nth-child(even) > td.matrix-status-cell{
+  background:#f8fafc !important;
+}
+
+/* Badge de estado: equivalente visual a PAC, pero adaptable al texto */
+#matrixDataPanel td.matrix-status-cell .matrix-status-pill{
+  display:inline-block !important;
+  width:auto !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  padding:5px 7px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:5px !important;
+  color:#fff !important;
+  font-size:9px !important;
+  line-height:1.12 !important;
+  font-weight:800 !important;
+  text-align:left !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  box-shadow:none !important;
+}
+
+/* Colores vibrantes SOLO detrás del texto */
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] td.matrix-status-cell .matrix-status-pill{
+  background:#009447 !important;
+  color:#fff !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] td.matrix-status-cell .matrix-status-pill{
+  background:#1672df !important;
+  color:#fff !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] td.matrix-status-cell .matrix-status-pill{
+  background:#e32636 !important;
+  color:#fff !important;
+}
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] td.matrix-status-cell .matrix-status-pill{
+  background:#ef7a13 !important;
+  color:#fff !important;
+}
+
+/* Evitar que reglas anteriores vuelvan a pintar la celda */
+#matrixDataPanel tr.project-status-row[data-project-status="Entregado para Contratación"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="En desarrollo"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="No iniciado"] > td.matrix-status-cell,
+#matrixDataPanel tr.project-status-row[data-project-status="Remitido a otra dirección"] > td.matrix-status-cell{
+  color:#0b2d55 !important;
+}
+
+
+/* =========================================================
+   V29.8 — MATRIZ SIN FONDOS DE COLOR + ESTADOS MÁS LEGIBLES
+   ========================================================= */
+
+/* Neutraliza TODAS las reglas históricas de coloreado de filas/celdas.
+   La matriz queda con un único fondo blanco uniforme. */
+#matrixDataPanel table tbody tr,
+#matrixDataPanel table tbody tr:nth-child(odd),
+#matrixDataPanel table tbody tr:nth-child(even),
+#matrixDataPanel table tbody tr.project-status-row,
+#matrixDataPanel table tbody tr.project-status-row[data-project-status]{
+  background:#fff !important;
+  background-color:#fff !important;
+}
+
+#matrixDataPanel table tbody tr > td,
+#matrixDataPanel table tbody tr:nth-child(odd) > td,
+#matrixDataPanel table tbody tr:nth-child(even) > td,
+#matrixDataPanel table tbody tr.project-status-row > td,
+#matrixDataPanel table tbody tr.project-status-row[data-project-status] > td,
+#matrixDataPanel table tbody td.matrix-status-cell{
+  background:#fff !important;
+  background-color:#fff !important;
+}
+
+/* Solo el badge lleva color; la celda permanece blanca */
+#matrixDataPanel td.matrix-status-cell .matrix-status-pill{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  width:auto !important;
+  max-width:100% !important;
+  min-height:27px !important;
+  box-sizing:border-box !important;
+  padding:6px 8px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:5px !important;
+  color:#fff !important;
+  font-size:10.5px !important;
+  line-height:1.15 !important;
+  font-weight:800 !important;
+  text-align:left !important;
+  white-space:normal !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+}
+
+/* Estados: fondos sólidos y texto blanco */
+#matrixDataPanel tr[data-project-status="Entregado para Contratación"] td.matrix-status-cell .matrix-status-pill{
+  background:#009b4d !important;
+  color:#fff !important;
+}
+#matrixDataPanel tr[data-project-status="En desarrollo"] td.matrix-status-cell .matrix-status-pill{
+  background:#126fda !important;
+  color:#fff !important;
+}
+#matrixDataPanel tr[data-project-status="No iniciado"] td.matrix-status-cell .matrix-status-pill{
+  background:#df2335 !important;
+  color:#fff !important;
+}
+#matrixDataPanel tr[data-project-status="Remitido a otra dirección"] td.matrix-status-cell .matrix-status-pill{
+  background:#e8750b !important;
+  color:#fff !important;
+}
+
+/* Hover sin teñir la fila */
+#matrixDataPanel table tbody tr:hover,
+#matrixDataPanel table tbody tr:hover > td{
+  background:#fff !important;
+  background-color:#fff !important;
+}
+
 </style>
 </head>
 <body class="sidebar-collapsed">
-<button id="mobileNavTrigger" class="mobile-nav-trigger" type="button" aria-label="Abrir menú de navegación">☰</button>
 
   <aside class="admin-sidebar" id="adminSidebar" aria-label="Panel de navegación">
     <div class="sidebar-head">
@@ -1517,7 +2466,13 @@
         <span class="side-icon">▦</span><span class="side-text">Matriz de Proyectos</span>
       </button>
     </nav>
-    <div class="sidebar-foot">GADM Riobamba · Jefatura de Diseño de la Obra Pública</div>
+    <div class="sidebar-foot sidebar-session-foot">
+      <button id="sidebarLogoutBtn" class="sidebar-logout-btn" type="button" hidden title="Cerrar sesión">
+        <span class="sidebar-logout-icon">⇥</span>
+        <span class="side-text">Cerrar sesión</span>
+      </button>
+      <div class="sidebar-institution">GADM Riobamba · Jefatura de Diseño de la Obra Pública</div>
+    </div>
   </aside>
 
 <div class="app-shell">
@@ -1527,44 +2482,63 @@
       <img src="./assets/logo-riobamba-negativo.png" alt="Riobamba - Alcaldía de la Gente" class="header-logo">
       <div class="header-divider"></div>
       <div class="header-title">
-        <h1>Seguimiento de Proyectos</h1>
+        <h1>DIRECCIÓN DE GESTIÓN DE PLANIFICACIÓN, HÁBITAT Y DESARROLLO URBANÍSTICO</h1>
         <p>Jefatura de Diseño de la Obra Pública</p>
       </div>
     </div>
-    <div class="report-date">
+    <div class="report-date report-date-v296">
       <svg viewBox="0 0 24 24"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v14A1.5 1.5 0 0 1 19 21.5H5A1.5 1.5 0 0 1 3.5 20V6A1.5 1.5 0 0 1 5 4.5Z"/></svg>
-      <div><span>Corte de información:</span><strong>Agosto 2026</strong></div>
+      <div class="report-date-content">
+        <div class="report-date-edit-row">
+          <strong id="reportCutText">Agosto 2026</strong>
+          <button id="editReportInfoBtn" class="report-edit-btn report-edit-icon" type="button" title="Editar corte y reforma" aria-label="Editar corte y reforma">✎</button>
+        </div>
+        <strong id="budgetReformText" class="budget-reform-text">Reforma Presupuestaria N° 9</strong>
+        <div class="report-parish-row">
+          <span>Parroquia</span>
+          <select id="dashboardParishFilter">
+            <option value="">Todas las parroquias</option>
+          </select>
+        </div>
+        <small id="dashboardFilterSummary">Mostrando información de todas las parroquias</small>
+      </div>
     </div>
   </header>
 
   <main class="main-content">
-    <section class="dashboard-toolbar">
-      <label>
-        <span>FILTRAR DASHBOARD POR PARROQUIA</span>
-        <select id="dashboardParishFilter">
-          <option value="">Todas las parroquias</option>
-        </select>
-      </label>
-      <div id="dashboardFilterSummary" class="dashboard-filter-summary">Mostrando información de todas las parroquias</div>
-    </section>
-
-    <section class="kpi-grid">
-      <article class="kpi-card kpi-total">
-        <span class="kpi-label">TOTAL DE PROYECTOS</span><strong id="kpiTotal">—</strong>
-        <div class="kpi-money" id="moneyTotal">—</div><div class="kpi-separator"></div><small>100% del total de proyectos</small>
-      </article>
-      <article class="kpi-card kpi-pac">
-        <span class="kpi-label">PROYECTOS PAC</span><strong id="kpiPac">—</strong>
-        <div class="kpi-money" id="moneyPac">—</div><div class="kpi-separator"></div><small id="pctPac">—</small>
-      </article>
-      <article class="kpi-card kpi-otros">
-        <span class="kpi-label">FUERA DEL PAC</span><strong id="kpiOtros">—</strong>
-        <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div><small id="pctOtros">—</small>
-      </article>
-      <article class="kpi-card kpi-oopp">
-        <span class="kpi-label">ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiOopp">—</strong>
-        <div class="kpi-money" id="moneyOopp">—</div><div class="kpi-separator"></div><small id="pctOopp">—</small>
-      </article>
+    <section class="universe-dashboard universe-dashboard-v291">
+      <div class="universe-block universe-pac">
+        <div class="universe-heading"><h2>PAC</h2></div>
+        <div class="universe-top-kpis">
+          <article class="kpi-card kpi-pac universe-summary-card">
+            <span class="kpi-label">TOTAL PROYECTOS</span><strong id="kpiPac">—</strong>
+            <div class="kpi-money" id="moneyPac">—</div><div class="kpi-separator"></div><small id="pctPac">Universo PAC</small>
+          </article>
+          <article class="kpi-card kpi-oopp universe-delivered-card">
+            <span class="kpi-label">ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiPacDelivered">—</strong>
+            <div class="kpi-money" id="moneyPacDelivered">—</div><div class="kpi-separator"></div><small id="pctPacDelivered">—</small>
+          </article>
+        </div>
+        <article class="kpi-card universe-direction-card">
+          <span class="kpi-label">INVERSIÓN POR DIRECCIÓN</span><div id="pacDirectionBreakdown" class="direction-breakdown"></div>
+        </article>
+      </div>
+      <div class="universe-block universe-out">
+        <div class="universe-heading"><h2>FUERA DEL PAC</h2></div>
+        <div class="universe-top-kpis">
+          <article class="kpi-card kpi-otros universe-summary-card">
+            <span class="kpi-label">TOTAL</span><strong id="kpiOtros">—</strong>
+            <div class="kpi-money" id="moneyOtros">—</div><div class="kpi-separator"></div><small id="pctOtros">Universo Fuera del PAC</small>
+          </article>
+          <article class="kpi-card kpi-oopp universe-delivered-card">
+            <span class="kpi-label">ENTREGADOS PARA CONTRATACIÓN</span><strong id="kpiOutsideDelivered">—</strong>
+            <div class="kpi-money" id="moneyOutsideDelivered">—</div><div class="kpi-separator"></div><small id="pctOutsideDelivered">—</small>
+          </article>
+        </div>
+        <article class="kpi-card universe-direction-card">
+          <span class="kpi-label">INVERSIÓN POR DIRECCIÓN</span><div id="outsideDirectionBreakdown" class="direction-breakdown"></div>
+        </article>
+      </div>
     </section>
 
     <section class="charts-top charts-three">
@@ -1606,10 +2580,10 @@
               <span id="mapMediaProjectMeta">Selecciona un proyecto en el mapa</span>
             </div>
             <button id="mapMediaPanelClose" class="map-media-panel-close" type="button" aria-label="Cerrar panel">×</button>
-            <button id="mapMediaOpenTop" class="map-media-open-top" type="button" disabled>Abrir imágenes</button>
+            <button id="mapMediaOpenTop" class="map-media-open-top" type="button" disabled>Abrir archivo seleccionado</button>
           </div>
           <div id="mapMediaPanelBody" class="map-media-panel-body"></div>
-          <div class="map-media-panel-note">Selecciona un archivo de la lista y usa “Abrir imágenes” para visualizarlo en pantalla completa.</div>
+          <div class="map-media-panel-note">Haz clic en cualquier imagen o video para abrirlo en pantalla completa. Usa las flechas para navegar entre todos los archivos.</div>
         </aside>
       </div>
     </section>
@@ -1626,9 +2600,10 @@
       </div>
       <div class="matrix-actions">
         <button id="downloadMatrixXlsx" class="matrix-btn" type="button">⇩ Descargar Matriz (.xlsx)</button>
-        <span id="dbConnectionBadge" class="connection-badge">Base no configurada</span>
-        <button id="matrixLogoutBtn" class="matrix-btn" type="button" hidden>Cerrar sesión</button>
+        <button id="addCustomFieldBtn" class="matrix-btn" type="button" hidden>+ Agregar campo</button>
         <button id="addProjectBtn" class="matrix-btn primary" type="button" hidden>+ Agregar proyecto</button>
+        <span id="dbConnectionBadge" class="connection-badge" hidden>Base no configurada</span>
+        <button id="matrixLogoutBtn" class="matrix-btn" type="button" hidden>Cerrar sesión</button>
       </div>
     </div>
 
@@ -1653,29 +2628,23 @@
     </div>
 
     <div id="matrixDataPanel" class="matrix-card" hidden>
-      <div class="matrix-toolbar">
-        <label>Categoría
-          <select id="matrixCategoryFilter">
-            <option value="">Todas</option>
-            <option value="PAC">PAC</option>
-            <option value="Fuera del PAC">Fuera del PAC</option>
-          </select>
-        </label>
-        <label>Parroquia
-          <select id="matrixParishFilter"><option value="">Todas</option></select>
-        </label>
-        <label>Estado
-          <select id="matrixStatusFilter">
-            <option value="">Todos</option>
-            <option value="En desarrollo">En desarrollo</option>
-            <option value="Entregado para Contratación">Entregado para Contratación</option>
-            <option value="Remitido a otra dirección">Remitido a otra dirección</option>
-            <option value="No iniciado">No iniciado</option>
-          </select>
-        </label>
-        <label>Buscar
+      <div class="matrix-toolbar matrix-toolbar-v29">
+        <label class="matrix-search-field">Buscar
           <input id="matrixSearch" type="search" placeholder="Buscar proyecto o parroquia…">
         </label>
+
+        <div class="multi-filter">
+          <span class="multi-filter-label">Campo</span>
+          <button id="matrixFieldPickerBtn" class="multi-filter-btn" type="button">Seleccionar campos <span id="matrixFieldCount" class="multi-count">0</span></button>
+          <div id="matrixFieldPicker" class="multi-filter-popover" hidden></div>
+        </div>
+
+        <div class="multi-filter">
+          <span class="multi-filter-label">Valor</span>
+          <button id="matrixValuePickerBtn" class="multi-filter-btn" type="button" disabled>Seleccionar valores <span id="matrixValueCount" class="multi-count">0</span></button>
+          <div id="matrixValuePicker" class="multi-filter-popover multi-filter-values" hidden></div>
+        </div>
+
         <label>Ordenar
           <select id="matrixSort">
             <option value="item-asc">N° de proyecto</option>
@@ -1686,16 +2655,26 @@
           </select>
         </label>
         <button id="matrixClearBtn" class="matrix-btn matrix-clear" type="button">↻ Limpiar filtros</button>
+
+        <div class="legacy-matrix-filters" hidden>
+          <select id="matrixCategoryFilter"><option value=""></option></select>
+          <select id="matrixParishFilter"><option value=""></option></select>
+          <select id="matrixStatusFilter"><option value=""></option></select>
+          <select id="matrixCoordinatesFilter"><option value=""></option></select>
+          <select id="matrixCustomFieldFilter"><option value=""></option></select>
+          <select id="matrixCustomValueFilter"><option value=""></option></select>
+        </div>
       </div>
       <div class="matrix-scroll">
         <table class="matrix-table">
           <thead>
-            <tr>
+            <tr id="matrixHeaderRow">
               <th>N°</th>
               <th>Proyecto</th>
               <th>Parroquia</th>
               <th>Categoría</th>
               <th>Monto (USD)</th>
+              <th>Trámite</th>
               <th>Descripción</th>
               <th>Estado</th>
               <th>Fecha prevista</th>
@@ -1738,6 +2717,7 @@
 </div>
 
 <script>
+console.info("Dashboard GADMR - V29.8 cargado");
 const $=s=>document.querySelector(s);
 const COLORS={navy:"#0d2a5b",blue:"#1e63d5",red:"#ef2b31",green:"#07964d",yellow:"#f2b134",purple:"#8d2f88",cyan:"#28a9df",orange:"#e96c1a"};
 const PALETTE=[COLORS.navy,COLORS.red,COLORS.green,COLORS.yellow,COLORS.purple,COLORS.cyan,COLORS.orange,COLORS.blue,"#6d7789","#9b5de5","#00a8a8","#c97b29"];
@@ -1762,11 +2742,20 @@ let currentPlatformsGeo=null;
 let parishLabelMarkers=[];
 let platformLabelMarkers=[];
 let currentDashboardParish="";
+let customFields=[];
+let customValues=[];
+let customValuesMap=new Map();
+let editingCustomFieldId=null;
+let matrixSelectedFields=new Set();
+let matrixSelectedValues=new Map();
+let googleMapsLoadPromise=null;
+let streetViewPanoramaInstance=null;
+
 
 const els={
- total:$("#kpiTotal"),pac:$("#kpiPac"),otros:$("#kpiOtros"),oopp:$("#kpiOopp"),
- moneyTotal:$("#moneyTotal"),moneyPac:$("#moneyPac"),moneyOtros:$("#moneyOtros"),moneyOopp:$("#moneyOopp"),
- pctPac:$("#pctPac"),pctOtros:$("#pctOtros"),pctOopp:$("#pctOopp"),
+ pac:$("#kpiPac"),otros:$("#kpiOtros"),
+ moneyPac:$("#moneyPac"),moneyOtros:$("#moneyOtros"),
+ pctPac:$("#pctPac"),pctOtros:$("#pctOtros"),
  body:$("#projectsBody"),category:$("#categoryFilter"),parish:$("#parishFilter"),status:$("#statusFilter"),
  search:$("#search"),clear:$("#clearFilters"),pageSize:$("#pageSize"),pagination:$("#pagination"),range:$("#rangeLabel"),
  modal:$("#modal"),modalContent:$("#modalContent"),modalClose:$("#modalClose"),
@@ -1839,6 +2828,18 @@ function dashboardParishMatches(projectParish,selectedParish){
  return p===selected;
 }
 
+
+function dashboardParishFilterLabel(value){
+ const p=normalizedParishName(value);
+ if(RIOBAMBA_URBAN_PARISHES.includes(p)) return "RIOBAMBA";
+ return String(value||"").trim();
+}
+
+function dashboardParishOptions(){
+ return [...new Set(projects.map(p=>dashboardParishFilterLabel(p.parroquia)).filter(Boolean))]
+   .sort((a,b)=>a.localeCompare(b,"es"));
+}
+
 function mapParishMatches(featureName,selectedParish){
  const f=normalizedParishName(featureName);
  const selected=normalizedParishName(selectedParish);
@@ -1850,6 +2851,190 @@ function mapParishMatches(featureName,selectedParish){
  }
 
  return f===selected;
+}
+
+
+function googleMapsConfigured(){
+ const cfg=window.GOOGLE_MAPS_CONFIG||{};
+ return Boolean(
+   cfg.apiKey &&
+   !String(cfg.apiKey).includes("PEGAR_") &&
+   !String(cfg.apiKey).includes("TU_GOOGLE")
+ );
+}
+
+function loadGoogleMapsApi(){
+ if(window.google?.maps) return Promise.resolve(window.google.maps);
+ if(googleMapsLoadPromise) return googleMapsLoadPromise;
+
+ googleMapsLoadPromise=new Promise((resolve,reject)=>{
+   if(!googleMapsConfigured()){
+     reject(new Error("La API key de Google Maps todavía no está configurada."));
+     return;
+   }
+
+   const existing=document.querySelector('script[data-google-maps-loader="true"]');
+   if(existing){
+     const wait=()=>{
+       if(window.google?.maps) resolve(window.google.maps);
+       else setTimeout(wait,100);
+     };
+     wait();
+     return;
+   }
+
+   const callbackName="__gadmrGoogleMapsReady";
+   window[callbackName]=()=>{
+     try{delete window[callbackName];}catch(e){}
+     resolve(window.google.maps);
+   };
+
+   const script=document.createElement("script");
+   script.dataset.googleMapsLoader="true";
+   script.async=true;
+   script.defer=true;
+   script.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(window.GOOGLE_MAPS_CONFIG.apiKey)}&v=weekly&loading=async&callback=${callbackName}`;
+   script.onerror=()=>{
+     googleMapsLoadPromise=null;
+     reject(new Error("No se pudo cargar Google Maps JavaScript API."));
+   };
+   document.head.appendChild(script);
+ });
+
+ return googleMapsLoadPromise;
+}
+
+function closeStreetView(){
+ const modal=document.getElementById("streetViewModal");
+ modal?.classList.remove("open");
+ modal?.setAttribute("aria-hidden","true");
+
+ const container=document.getElementById("streetViewPanorama");
+ if(container) container.innerHTML="";
+ streetViewPanoramaInstance=null;
+ document.body.style.overflow="";
+}
+
+async function openStreetViewAt(lat,lng,projectName="Proyecto",locationLabel=""){
+ const modal=document.getElementById("streetViewModal");
+ const title=document.getElementById("streetViewTitle");
+ const meta=document.getElementById("streetViewMeta");
+ const status=document.getElementById("streetViewStatus");
+ const container=document.getElementById("streetViewPanorama");
+
+ if(!modal||!container||!status) return;
+
+ title.textContent=projectName||"Street View";
+ meta.textContent=locationLabel
+   ? `${locationLabel} · ${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`
+   : `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+
+ status.className="streetview-status";
+ status.textContent="Buscando cobertura de Street View cercana…";
+ status.style.display="block";
+ container.innerHTML="";
+
+ modal.classList.add("open");
+ modal.setAttribute("aria-hidden","false");
+ document.body.style.overflow="hidden";
+
+ try{
+   await loadGoogleMapsApi();
+
+   const streetLib=await google.maps.importLibrary("streetView");
+   const StreetViewService=streetLib.StreetViewService;
+   const StreetViewPanorama=streetLib.StreetViewPanorama;
+   const StreetViewSource=streetLib.StreetViewSource;
+
+   const service=new StreetViewService();
+
+   let response=null;
+   const radii=[50,100,250,500];
+
+   for(const radius of radii){
+     try{
+       response=await service.getPanorama({
+         location:{lat:Number(lat),lng:Number(lng)},
+         radius,
+         source:StreetViewSource.OUTDOOR
+       });
+       if(response?.data?.location?.pano) break;
+     }catch(err){
+       response=null;
+     }
+   }
+
+   if(!response?.data?.location?.pano){
+     throw new Error("No se encontró cobertura de Street View cerca de este proyecto.");
+   }
+
+   status.style.display="none";
+
+   streetViewPanoramaInstance=new StreetViewPanorama(container,{
+     pano:response.data.location.pano,
+     pov:{heading:0,pitch:0},
+     zoom:1,
+     addressControl:true,
+     linksControl:true,
+     panControl:true,
+     enableCloseButton:false,
+     fullscreenControl:true,
+     motionTracking:false
+   });
+
+   const panoLatLng=response.data.location.latLng;
+   if(panoLatLng){
+     meta.textContent=`Panorama cercano · ${panoLatLng.lat().toFixed(6)}, ${panoLatLng.lng().toFixed(6)}`;
+   }
+ }catch(err){
+   console.error("Street View:",err);
+   status.className="streetview-status error";
+   status.textContent=err.message||"No se pudo abrir Street View.";
+ }
+}
+
+function findProjectRowById(projectId){
+ return matrixRows.find(r=>String(r.id)===String(projectId))||null;
+}
+
+function openStreetViewForProject(projectId,locationIndex=0){
+ const row=findProjectRowById(projectId);
+ if(!row){
+   alert("No se encontró el proyecto.");
+   return;
+ }
+
+ const p=dbRowToProject(row);
+ const locations=projectLocations(p);
+ if(!locations.length){
+   alert("Este proyecto no tiene coordenadas registradas.");
+   return;
+ }
+
+ const index=Math.max(0,Math.min(Number(locationIndex)||0,locations.length-1));
+ const loc=locations[index];
+
+ openStreetViewAt(
+   loc.lat,
+   loc.lng,
+   p.proyecto||"Proyecto",
+   locations.length>1 ? (loc.label||`Ubicación ${index+1}`) : ""
+ );
+}
+
+function wireStreetViewButtons(root=document){
+ root.querySelectorAll?.("[data-streetview-project]").forEach(btn=>{
+   if(btn.dataset.streetviewBound==="true") return;
+   btn.dataset.streetviewBound="true";
+   btn.addEventListener("click",e=>{
+     e.preventDefault();
+     e.stopPropagation();
+     openStreetViewForProject(
+       btn.dataset.streetviewProject,
+       Number(btn.dataset.streetviewLocation||0)
+     );
+   });
+ });
 }
 
 function dashboardProjects(){
@@ -1874,30 +3059,76 @@ function displayCategory(v){return v || "—";}
 function unique(field){return [...new Set(projects.map(p=>p[field]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));}
 function fillSelect(el,vals){vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o);});}
 
+function pacDirectionField(){
+ return customFields.find(f=>String(f.name||"").trim().toUpperCase()==="PAC DE LA DIRECCIÓN")
+   || customFields.find(f=>String(f.field_key||"")==="pac_de_la_direccion")
+   || null;
+}
+
+function renderDirectionBreakdown(containerId,rows){
+ const wrap=document.getElementById(containerId);
+ if(!wrap)return;
+ const field=pacDirectionField();
+ const totalMoney=rows.reduce((s,p)=>s+amount(p),0);
+
+ if(!field){
+   wrap.innerHTML='<div class="direction-empty">Crea o habilita el campo “PAC de la Dirección” para visualizar esta distribución.</div>';
+   return;
+ }
+
+ const groups=new Map();
+ rows.forEach(p=>{
+   const label=String(getCustomValue(p.id,field.id)||"Sin información").trim()||"Sin información";
+   if(!groups.has(label))groups.set(label,{count:0,money:0});
+   const g=groups.get(label);g.count++;g.money+=amount(p);
+ });
+
+ const items=[...groups.entries()].sort((a,b)=>b[1].money-a[1].money);
+ if(!items.length){
+   wrap.innerHTML='<div class="direction-empty">Sin proyectos en este universo.</div>';
+   return;
+ }
+
+ wrap.innerHTML=items.map(([name,g])=>{
+   const share=totalMoney?g.money/totalMoney*100:0;
+   return `<div class="direction-item">
+     <div class="direction-row"><strong>${esc(name)}</strong><span>${share.toFixed(1)}%</span></div>
+     <div class="direction-bar"><i style="width:${Math.max(0,Math.min(100,share))}%"></i></div>
+     <div class="direction-meta"><span>${g.count} proyecto${g.count===1?"":"s"}</span><b>${moneyValue(g.money)}</b></div>
+   </div>`;
+ }).join("");
+}
+
 function renderKpis(){
  const data=dashboardProjects();
- const total=data.length,
-       pac=data.filter(p=>p.categoria==="PAC"),
-       fuera=data.filter(p=>p.categoria==="Fuera del PAC"),
-       entregados=data.filter(p=>groupedStatus(p)==="Entregado para Contratación");
+ const pac=data.filter(p=>p.categoria==="PAC");
+ const fuera=data.filter(p=>p.categoria==="Fuera del PAC");
+ const pacDelivered=pac.filter(p=>groupedStatus(p)==="Entregado para Contratación");
+ const outsideDelivered=fuera.filter(p=>groupedStatus(p)==="Entregado para Contratación");
 
- els.total.textContent=total;
  els.pac.textContent=pac.length;
  els.otros.textContent=fuera.length;
- els.oopp.textContent=entregados.length;
-
- els.moneyTotal.textContent=moneyValue(data.reduce((s,p)=>s+amount(p),0));
  els.moneyPac.textContent=moneyValue(pac.reduce((s,p)=>s+amount(p),0));
  els.moneyOtros.textContent=moneyValue(fuera.reduce((s,p)=>s+amount(p),0));
- els.moneyOopp.textContent=moneyValue(entregados.reduce((s,p)=>s+amount(p),0));
+ els.pctPac.textContent="100% del universo PAC";
+ els.pctOtros.textContent="100% del universo Fuera del PAC";
 
- els.pctPac.textContent=pct(pac.length,total);
- els.pctOtros.textContent=pct(fuera.length,total);
- els.pctOopp.textContent=pct(entregados.length,total);
+ const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ set("kpiPacDelivered",pacDelivered.length);
+ set("moneyPacDelivered",moneyValue(pacDelivered.reduce((s,p)=>s+amount(p),0)));
+ set("pctPacDelivered",pac.length?`${(pacDelivered.length/pac.length*100).toFixed(1)}% de los proyectos PAC`:"—");
+
+ set("kpiOutsideDelivered",outsideDelivered.length);
+ set("moneyOutsideDelivered",moneyValue(outsideDelivered.reduce((s,p)=>s+amount(p),0)));
+ set("pctOutsideDelivered",fuera.length?`${(outsideDelivered.length/fuera.length*100).toFixed(1)}% de los proyectos Fuera del PAC`:"—");
+
+ renderDirectionBreakdown("pacDirectionBreakdown",pac);
+ renderDirectionBreakdown("outsideDirectionBreakdown",fuera);
 
  const summary=document.getElementById("dashboardFilterSummary");
  if(summary){
    const parish=document.getElementById("dashboardParishFilter")?.value||"";
+   const total=data.length;
    summary.textContent=parish
      ? (normalizedParishName(parish)==="RIOBAMBA"
          ? `Mostrando ${total} proyecto${total===1?"":"s"} de Riobamba y sus parroquias urbanas`
@@ -2080,7 +3311,7 @@ function renderCharts(){
       datasets:[{
         label:"Proyectos",
         data:pe.map(x=>x[1]),
-        backgroundColor:pe.map((_,i)=>PALETTE[i%PALETTE.length]),
+        backgroundColor:COLORS.blue,
         borderRadius:2,
         barPercentage:.7
       }]
@@ -2148,7 +3379,7 @@ function renderCharts(){
     datasets:[{
       label:"Inversión",
       data:values,
-      backgroundColor:labels.map((_,i)=>PALETTE[i%PALETTE.length]),
+      backgroundColor:COLORS.blue,
       borderRadius:3,
       barPercentage:.65,
       categoryPercentage:.82
@@ -2777,13 +4008,19 @@ async function renderProjectMap(){
          <span><b>Monto:</b> ${esc(p.monto||"—")}</span><br>
          <span><b>Avance:</b> ${esc(p.avance||"—")}</span><br>
          <span><b>Área de intervención:</b> ${esc(p.area_intervencion||"—")}</span>
+         <div class="popup-streetview-wrap">
+           <button class="streetview-btn" type="button"
+             data-streetview-project="${esc(p.project_id)}"
+             data-streetview-location="0">◉ Street View</button>
+         </div>
        </div>`;
 
-     new maplibregl.Popup({closeButton:true,offset:12})
+     const projectPopup=new maplibregl.Popup({closeButton:true,offset:12})
        .setLngLat(f.geometry.coordinates)
        .setHTML(htmlPopup)
        .addTo(map);
 
+     setTimeout(()=>wireStreetViewButtons(projectPopup.getElement()),0);
      renderMapMediaPanel(p,media);
    });
 
@@ -2867,8 +4104,11 @@ function openModal(item){
  ${detail("Coordenada X",p["Coordenadas X"])}
  ${detail("Coordenada Y",p["Coordenadas Y"])}
  ${detail("Responsables",p.responsables,true)}
- ${detail("Descripción / estado registrado",p.estado_original,true)}</div>`;
+ ${detail("Descripción / estado registrado",p.estado_original,true)}
+ ${projectLocations(p).length?`<div class="detail full" style="background:#fff;padding-left:0"><button class="streetview-btn" type="button" data-streetview-project="${esc(p.id)}">◉ Abrir Street View</button></div>`:""}
+ </div>`;
  els.modal.classList.add("open");els.modal.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
+ setTimeout(()=>wireStreetViewButtons(els.modalContent),0);
 }
 function closeModal(){els.modal.classList.remove("open");els.modal.setAttribute("aria-hidden","true");document.body.style.overflow="";}
 function resetPageAndRender(){currentPage=1;renderTable();}
@@ -2883,6 +4123,7 @@ function bind(){
    if(e.key==="Escape"){
      closeModal();
      closeParishModal();
+     closeStreetView();
    }
  });
 }
@@ -2953,6 +4194,246 @@ async function initDatabase(){
  }
 }
 
+
+function slugifyFieldKey(name){
+ return String(name||"campo").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
+   .replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,48)||`campo_${Date.now()}`;
+}
+function customValueKey(projectId,fieldId){return `${projectId}::${fieldId}`;}
+function rebuildCustomValuesMap(){
+ customValuesMap=new Map();
+ customValues.forEach(v=>customValuesMap.set(customValueKey(v.project_id,v.field_id),v.value_text??""));
+}
+function getCustomValue(projectId,fieldId){return customValuesMap.get(customValueKey(projectId,fieldId))??"";}
+function fieldOptions(field){
+ if(Array.isArray(field?.options)) return field.options;
+ if(typeof field?.options==="string"){try{const p=JSON.parse(field.options);return Array.isArray(p)?p:[]}catch(e){return []}}
+ return [];
+}
+function sortedCustomFields(list=customFields){
+ return list.slice().sort((a,b)=>(Number(a.display_order)||100)-(Number(b.display_order)||100)||String(a.name).localeCompare(String(b.name),"es"));
+}
+function visibleCustomFields(){return sortedCustomFields(customFields.filter(f=>f.show_in_matrix!==false));}
+function filterableCustomFields(){return sortedCustomFields(customFields.filter(f=>f.filterable!==false));}
+
+async function loadCustomFieldsAndValues(){
+ // V28.1: esta función nunca debe impedir la carga del Dashboard principal.
+ if(!dbReady){
+   customFields=[];
+   customValues=[];
+   rebuildCustomValuesMap();
+   renderCustomFieldFilterControls();
+   return false;
+ }
+
+ try{
+   const [fr,vr]=await Promise.all([
+     dbClient.from("project_custom_fields").select("*").order("display_order",{ascending:true}).order("name",{ascending:true}),
+     dbClient.from("project_custom_values").select("*")
+   ]);
+
+   if(fr.error) throw fr.error;
+   if(vr.error) throw vr.error;
+
+   customFields=fr.data||[];
+   customValues=vr.data||[];
+   rebuildCustomValuesMap();
+   renderCustomFieldFilterControls();
+   window.customFieldsReady=true;
+   window.customFieldsError=null;
+   const btn=document.getElementById("addCustomFieldBtn");
+   if(btn){
+     btn.disabled=false;
+     btn.title="Agregar una nueva columna para todos los proyectos";
+   }
+   const section=document.getElementById("customFieldsFormSection");
+   if(section) section.hidden=false;
+   return true;
+ }catch(err){
+   console.warn("V28.2 · Campos personalizados no disponibles. El Dashboard continuará funcionando.",{
+     message:err?.message,
+     details:err?.details,
+     hint:err?.hint,
+     code:err?.code,
+     error:err
+   });
+   customFields=[];
+   customValues=[];
+   rebuildCustomValuesMap();
+   renderCustomFieldFilterControls();
+   window.customFieldsReady=false;
+   window.customFieldsError=err;
+
+   const btn=document.getElementById("addCustomFieldBtn");
+   if(btn){
+     btn.disabled=false;
+     btn.title="Reintentar conexión con campos personalizados";
+   }
+
+   const section=document.getElementById("customFieldsFormSection");
+   if(section) section.hidden=true;
+
+   return false;
+ }
+}
+function renderCustomFieldFilterControls(){
+ const fs=document.getElementById("matrixCustomFieldFilter"),vs=document.getElementById("matrixCustomValueFilter");
+ if(!fs||!vs)return;
+ const prevF=fs.value,prevV=vs.value;
+ const fields=filterableCustomFields();
+ fs.innerHTML='<option value="">Ninguno</option>'+fields.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+ if(fields.some(f=>String(f.id)===String(prevF))) fs.value=prevF;
+ updateCustomValueFilterOptions(prevV);
+}
+function updateCustomValueFilterOptions(preferred=""){
+ const fs=document.getElementById("matrixCustomFieldFilter"),vs=document.getElementById("matrixCustomValueFilter");
+ if(!fs||!vs)return;
+ const f=customFields.find(x=>String(x.id)===String(fs.value));
+ if(!f){vs.innerHTML='<option value="">Todos</option>';vs.disabled=true;return;}
+ let vals=[];
+ if(f.field_type==="select") vals=fieldOptions(f);
+ else if(f.field_type==="boolean") vals=["Sí","No"];
+ else vals=[...new Set(matrixRows.map(r=>getCustomValue(r.id,f.id)).filter(v=>String(v).trim()))].sort((a,b)=>String(a).localeCompare(String(b),"es"));
+ vs.disabled=false;
+ vs.innerHTML='<option value="">Todos</option>'+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+ if(vals.map(String).includes(String(preferred)))vs.value=preferred;
+}
+function customInputHtml(field,value=""){
+ const id=`customValue_${field.id}`,t=field.field_type||"text";
+ if(t==="select") return `<label class="field-label">${esc(field.name)}<select id="${id}" class="field-control" data-custom-field-id="${field.id}"><option value="">Sin información</option>${fieldOptions(field).map(o=>`<option value="${esc(o)}" ${String(o)===String(value)?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`;
+ if(t==="boolean") return `<label class="field-label">${esc(field.name)}<select id="${id}" class="field-control" data-custom-field-id="${field.id}"><option value="">Sin información</option><option value="Sí" ${value==="Sí"?"selected":""}>Sí</option><option value="No" ${value==="No"?"selected":""}>No</option></select></label>`;
+ if(t==="number") return `<label class="field-label">${esc(field.name)}<input id="${id}" class="field-control" data-custom-field-id="${field.id}" type="number" step="any" value="${esc(value)}"></label>`;
+ if(t==="date") return `<label class="field-label">${esc(field.name)}<input id="${id}" class="field-control" data-custom-field-id="${field.id}" type="date" value="${esc(value)}"></label>`;
+ return `<label class="field-label">${esc(field.name)}<input id="${id}" class="field-control" data-custom-field-id="${field.id}" type="text" value="${esc(value)}"></label>`;
+}
+function renderCustomFieldsForm(projectId=null){
+ const w=document.getElementById("customFieldsFormGrid");if(!w)return;
+ if(!customFields.length){w.innerHTML='<div class="custom-field-empty">Todavía no existen campos adicionales.</div>';return;}
+ w.innerHTML=sortedCustomFields().map(f=>customInputHtml(f,projectId?getCustomValue(projectId,f.id):"")).join("");
+}
+async function saveCustomValuesForProject(projectId){
+ if(window.customFieldsReady===false || !customFields.length) return;
+ const rows=[],empty=[];
+ customFields.forEach(f=>{
+   const el=document.querySelector(`[data-custom-field-id="${f.id}"]`);if(!el)return;
+   const v=String(el.value??"").trim();
+   if(v==="")empty.push(f.id);else rows.push({project_id:Number(projectId),field_id:Number(f.id),value_text:v});
+ });
+ if(rows.length){const {error}=await dbClient.from("project_custom_values").upsert(rows,{onConflict:"project_id,field_id"});if(error)throw error;}
+ if(empty.length){const {error}=await dbClient.from("project_custom_values").delete().eq("project_id",Number(projectId)).in("field_id",empty);if(error)throw error;}
+}
+function renderCustomFieldsExistingList(){
+ const w=document.getElementById("customFieldExistingList");if(!w)return;
+ if(!customFields.length){w.innerHTML='<div class="custom-field-empty">No existen campos adicionales.</div>';return;}
+ const tn={select:"Lista",text:"Texto",number:"Número",date:"Fecha",boolean:"Sí / No"};
+ w.innerHTML=sortedCustomFields().map(f=>`<div class="custom-field-existing-item">
+   <strong>${esc(f.name)}</strong>
+   <span>${esc(tn[f.field_type]||f.field_type)} · Posición ${Number(f.display_order)||100}</span>
+   <button class="matrix-btn custom-field-edit-btn" type="button" data-edit-custom-field="${f.id}">Editar</button>
+ </div>`).join("");
+ w.querySelectorAll("[data-edit-custom-field]").forEach(btn=>{
+   btn.addEventListener("click",()=>startEditCustomField(btn.dataset.editCustomField));
+ });
+}
+
+function resetCustomFieldEditor(){
+ editingCustomFieldId=null;
+ document.getElementById("customFieldName").value="";
+ document.getElementById("customFieldType").value="select";
+ document.getElementById("customFieldOptions").value="";
+ document.getElementById("customFieldShowMatrix").checked=true;
+ document.getElementById("customFieldFilterable").checked=true;
+ document.getElementById("customFieldOrder").value=customFields.length?Math.max(...customFields.map(f=>Number(f.display_order)||0))+10:100;
+ document.getElementById("customFieldStatus").textContent="";
+ document.getElementById("customFieldSave").textContent="Crear campo";
+ updateCustomFieldOptionsVisibility();
+}
+function startEditCustomField(fieldId){
+ const field=customFields.find(f=>String(f.id)===String(fieldId));
+ if(!field)return;
+ editingCustomFieldId=field.id;
+ document.getElementById("customFieldName").value=field.name||"";
+ document.getElementById("customFieldType").value=field.field_type||"text";
+ document.getElementById("customFieldOptions").value=fieldOptions(field).join("\\n");
+ document.getElementById("customFieldShowMatrix").checked=field.show_in_matrix!==false;
+ document.getElementById("customFieldFilterable").checked=field.filterable!==false;
+ document.getElementById("customFieldOrder").value=Number(field.display_order)||100;
+ document.getElementById("customFieldStatus").textContent=`Editando: ${field.name}`;
+ document.getElementById("customFieldSave").textContent="Guardar cambios";
+ updateCustomFieldOptionsVisibility();
+ document.getElementById("customFieldName").focus();
+}
+function updateCustomFieldOptionsVisibility(){
+ const l=document.getElementById("customFieldOptionsLabel");if(l)l.hidden=document.getElementById("customFieldType")?.value!=="select";
+}
+async function openCustomFieldModal(){
+ if(!dbReady)return;
+ if(window.customFieldsReady===false){
+   const recovered=await loadCustomFieldsAndValues();
+   if(!recovered){
+     const detail=window.customFieldsError?.message||window.customFieldsError?.details||"Error de acceso a las tablas de campos personalizados.";
+     alert("No se pudo acceder al módulo de campos personalizados.\n\nDetalle: "+detail+"\n\nEjecuta REPARAR_SUPABASE_V28_2.sql y vuelve a cargar la página.");
+     return;
+   }
+ }
+ if(!currentSession){requireEditor(openCustomFieldModal);return;}
+ resetCustomFieldEditor();
+ renderCustomFieldsExistingList();
+ const m=document.getElementById("customFieldModal");m.classList.add("open");m.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
+}
+function closeCustomFieldModal(){
+ const m=document.getElementById("customFieldModal");m.classList.remove("open");m.setAttribute("aria-hidden","true");document.body.style.overflow="";
+}
+async function createCustomField(){
+ const status=document.getElementById("customFieldStatus"),btn=document.getElementById("customFieldSave");
+ const name=document.getElementById("customFieldName").value.trim(),type=document.getElementById("customFieldType").value;
+ const opts=[...new Set(document.getElementById("customFieldOptions").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+ if(!name){status.textContent="Escribe el nombre del campo.";return;}
+ if(type==="select"&&!opts.length){status.textContent="Agrega al menos una opción.";return;}
+
+ btn.disabled=true;
+ status.textContent=editingCustomFieldId?"Guardando cambios…":"Creando campo…";
+
+ try{
+   const payload={
+     name,
+     field_type:type,
+     options:type==="select"?opts:[],
+     show_in_matrix:document.getElementById("customFieldShowMatrix").checked,
+     filterable:document.getElementById("customFieldFilterable").checked,
+     display_order:Number(document.getElementById("customFieldOrder").value)||100
+   };
+
+   if(editingCustomFieldId){
+     const current=customFields.find(f=>String(f.id)===String(editingCustomFieldId));
+     payload.field_key=current?.field_key||slugifyFieldKey(name);
+     const {error}=await dbClient.from("project_custom_fields").update(payload).eq("id",editingCustomFieldId);
+     if(error)throw error;
+   }else{
+     let key=slugifyFieldKey(name);
+     if(customFields.some(f=>f.field_key===key))key=`${key}_${Date.now().toString().slice(-5)}`;
+     payload.field_key=key;
+     payload.created_by=currentSession?.user?.id||null;
+     const {error}=await dbClient.from("project_custom_fields").insert(payload);
+     if(error)throw error;
+   }
+
+   const wasEditing=!!editingCustomFieldId;
+   await loadCustomFieldsAndValues();
+   renderMatrix();
+   renderCustomFieldsExistingList();
+   renderCustomFieldsForm(document.getElementById("projectId")?.value||null);
+   status.textContent=wasEditing?"Campo actualizado correctamente.":"Campo creado correctamente.";
+   resetCustomFieldEditor();
+   renderCustomFieldsExistingList();
+ }catch(err){
+   console.error(err);
+   status.textContent=`No se pudo guardar: ${err.message||err}`;
+ }finally{
+   btn.disabled=false;
+ }
+}
+
 function dbRowToProject(r){
  return {
    ...r,
@@ -2979,6 +4460,9 @@ async function refreshProjectsFromDatabase(){
 
  matrixRows=data||[];
  projects=matrixRows.map(dbRowToProject);
+
+ // Los campos adicionales son opcionales: un fallo aquí no detiene proyectos, KPIs, gráficos ni mapa.
+ await loadCustomFieldsAndValues();
 
  if(els.parish){
    const current=els.parish.value;
@@ -3069,6 +4553,7 @@ function openCrud(row=null){
    return;
  }
  setFormFromRow(row);
+ renderCustomFieldsForm(row?.id||null);
  document.getElementById("crudTitle").textContent=row?"Editar proyecto":"Agregar proyecto";
  document.getElementById("crudStatus").textContent="";
 
@@ -3125,6 +4610,7 @@ async function saveProject(evt){
    }
    if(result.error) throw result.error;
 
+   await saveCustomValuesForProject(result.data.id);
    await afterDatabaseChange();
    closeCrud();
  }catch(err){
@@ -3170,7 +4656,7 @@ async function afterDatabaseChange(){
  const dashboardSelect=document.getElementById("dashboardParishFilter");
  if(dashboardSelect){
    const current=dashboardSelect.value;
-   const vals=unique("parroquia");
+   const vals=dashboardParishOptions();
    dashboardSelect.innerHTML='<option value="">Todas las parroquias</option>';
    fillSelect(dashboardSelect,vals);
    if(vals.includes(current)) dashboardSelect.value=current;
@@ -3208,7 +4694,14 @@ async function getProjectMedia(projectId){
    console.warn("project_media:",error);
    return [];
  }
- return data||[];
+ const priority={video:0,image:1,pdf:2,tour360:3};
+ const sorted=(data||[]).slice().sort((a,b)=>{
+   const pa=priority[a.media_type]??9;
+   const pb=priority[b.media_type]??9;
+   if(pa!==pb) return pa-pb;
+   return String(a.created_at||"").localeCompare(String(b.created_at||""));
+ });
+ return sorted;
 }
 
 function mediaIcon(type){
@@ -3257,6 +4750,13 @@ function renderMapMediaPanel(projectProps,media){
 
  panel.classList.add("open");
  panel.setAttribute("aria-hidden","false");
+
+ setTimeout(()=>{
+   panel.querySelectorAll("video").forEach(video=>{
+     video.muted=true;
+     video.play().catch(()=>{});
+   });
+ },50);
 }
 
 function renderMapMediaList(){
@@ -3265,9 +4765,16 @@ function renderMapMediaList(){
 
  list.innerHTML=mapMediaCarouselItems.map((m,i)=>{
    const url=mediaPublicUrl(m.storage_path);
-   const preview=m.media_type==="image"
-     ? `<img src="${esc(url)}" alt="${esc(m.title||m.file_name||"Imagen")}">`
-     : `<div class="map-media-file-placeholder">${esc(mediaIcon(m.media_type))}</div>`;
+
+   let preview="";
+   if(m.media_type==="video"){
+     preview=`<video src="${esc(url)}" autoplay muted loop playsinline preload="metadata"></video>
+              <span class="map-media-video-badge">▶ VIDEO</span>`;
+   }else if(m.media_type==="image"){
+     preview=`<img src="${esc(url)}" alt="${esc(m.title||m.file_name||"Imagen")}">`;
+   }else{
+     preview=`<div class="map-media-file-placeholder">${esc(mediaIcon(m.media_type))}</div>`;
+   }
 
    return `<button class="map-media-list-item ${i===mapMediaCarouselIndex?"active":""}"
             type="button"
@@ -3282,11 +4789,17 @@ function renderMapMediaList(){
  list.querySelectorAll("[data-media-index]").forEach(btn=>{
    btn.addEventListener("click",()=>{
      mapMediaCarouselIndex=Number(btn.dataset.mediaIndex);
-     renderMapMediaList();
-
-     const active=btn;
-     active?.scrollIntoView({block:"nearest",behavior:"smooth"});
+     const record=mapMediaCarouselItems[mapMediaCarouselIndex];
+     if(record){
+       openMediaViewer(record,mapMediaCarouselItems,mapMediaCarouselIndex);
+     }
    });
+ });
+
+ // Forzar reproducción de previews cuando el navegador la permita.
+ list.querySelectorAll("video").forEach(video=>{
+   video.muted=true;
+   video.play().catch(()=>{});
  });
 }
 
@@ -3406,7 +4919,7 @@ function renderMediaViewerSlide(){
  }else if(record.media_type==="pdf"){
    body.innerHTML=`<iframe src="${esc(url)}" title="${esc(record.title||"PDF")}"></iframe>`;
  }else if(record.media_type==="video"){
-   body.innerHTML=`<video src="${esc(url)}" controls autoplay playsinline></video>`;
+   body.innerHTML=`<video src="${esc(url)}" controls autoplay playsinline preload="auto"></video>`;
  }else if(record.media_type==="tour360"){
    body.innerHTML='<div id="panorama360"></div>';
    if(window.pannellum){
@@ -3591,20 +5104,91 @@ async function deleteMedia(mediaId){
  await loadProjectMedia(record.project_id);
 }
 
+
+function matrixFilterDefinitions(){
+ const base=[
+   {key:"categoria",label:"Categoría",values:()=>["PAC","Fuera del PAC"]},
+   {key:"parroquia",label:"Parroquia",values:()=>[...new Set(matrixRows.map(r=>r.parroquia).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))},
+   {key:"estado",label:"Estado",values:()=>["En desarrollo","Entregado para Contratación","Remitido a otra dirección","No iniciado"]},
+   {key:"coordenadas",label:"Coordenadas",values:()=>["Con coordenadas","Sin coordenadas"]}
+ ];
+ filterableCustomFields().forEach(f=>base.push({
+   key:`custom:${f.id}`,
+   label:f.name,
+   values:()=>f.field_type==="select"?fieldOptions(f):
+     f.field_type==="boolean"?["Sí","No"]:
+     [...new Set(matrixRows.map(r=>getCustomValue(r.id,f.id)).filter(v=>String(v).trim()))].sort((a,b)=>String(a).localeCompare(String(b),"es"))
+ }));
+ return base;
+}
+function renderMatrixFieldPicker(){
+ const wrap=document.getElementById("matrixFieldPicker");if(!wrap)return;
+ const defs=matrixFilterDefinitions();
+ wrap.innerHTML=defs.map(d=>`<label class="multi-option"><input type="checkbox" data-matrix-field="${esc(d.key)}" ${matrixSelectedFields.has(d.key)?"checked":""}><span>${esc(d.label)}</span></label>`).join("");
+ wrap.querySelectorAll("[data-matrix-field]").forEach(cb=>cb.addEventListener("change",()=>{
+   const key=cb.dataset.matrixField;
+   if(cb.checked)matrixSelectedFields.add(key);
+   else{matrixSelectedFields.delete(key);matrixSelectedValues.delete(key);}
+   renderMatrixFieldPicker();renderMatrixValuePicker();updateMatrixFilterButtons();matrixCurrentPage=1;renderMatrix();
+ }));
+}
+function renderMatrixValuePicker(){
+ const wrap=document.getElementById("matrixValuePicker");if(!wrap)return;
+ const defs=matrixFilterDefinitions().filter(d=>matrixSelectedFields.has(d.key));
+ if(!defs.length){
+   wrap.innerHTML='<div class="multi-empty">Selecciona primero uno o más campos.</div>';
+   return;
+ }
+ wrap.innerHTML=defs.map(d=>{
+   const selected=matrixSelectedValues.get(d.key)||new Set();
+   const values=d.values();
+   return `<div class="multi-value-group"><strong>${esc(d.label)}</strong>${values.map(v=>`<label class="multi-option"><input type="checkbox" data-matrix-value-field="${esc(d.key)}" data-matrix-value="${esc(v)}" ${selected.has(String(v))?"checked":""}><span>${esc(v)}</span></label>`).join("")}</div>`;
+ }).join("");
+ wrap.querySelectorAll("[data-matrix-value-field]").forEach(cb=>cb.addEventListener("change",()=>{
+   const key=cb.dataset.matrixValueField,val=cb.dataset.matrixValue;
+   if(!matrixSelectedValues.has(key))matrixSelectedValues.set(key,new Set());
+   const set=matrixSelectedValues.get(key);
+   if(cb.checked)set.add(val);else set.delete(val);
+   if(!set.size)matrixSelectedValues.delete(key);
+   updateMatrixFilterButtons();matrixCurrentPage=1;renderMatrix();
+ }));
+}
+function updateMatrixFilterButtons(){
+ const fc=document.getElementById("matrixFieldCount"),vc=document.getElementById("matrixValueCount"),vb=document.getElementById("matrixValuePickerBtn");
+ if(fc)fc.textContent=matrixSelectedFields.size;
+ const valueCount=[...matrixSelectedValues.values()].reduce((s,set)=>s+set.size,0);
+ if(vc)vc.textContent=valueCount;
+ if(vb)vb.disabled=!matrixSelectedFields.size;
+}
+function matrixRowMatchesMultiFilters(r){
+ if(!matrixSelectedFields.size)return true;
+ for(const key of matrixSelectedFields){
+   const selected=matrixSelectedValues.get(key);
+   if(!selected||!selected.size)continue; // field selected but no value = no restriction yet
+   let value="";
+   if(key==="categoria")value=r.categoria||"";
+   else if(key==="parroquia")value=r.parroquia||"";
+   else if(key==="estado")value=r.estado_dashboard||"";
+   else if(key==="coordenadas")value=projectLocations(dbRowToProject(r)).length?"Con coordenadas":"Sin coordenadas";
+   else if(key.startsWith("custom:"))value=String(getCustomValue(r.id,key.split(":")[1])||"");
+   if(!selected.has(String(value)))return false;
+ }
+ return true;
+}
+function closeMatrixFilterPopovers(except=null){
+ ["matrixFieldPicker","matrixValuePicker"].forEach(id=>{
+   if(id!==except){const el=document.getElementById(id);if(el)el.hidden=true;}
+ });
+}
+
 function matrixFilteredRows(){
  const q=(document.getElementById("matrixSearch")?.value||"").trim().toLowerCase();
- const cat=document.getElementById("matrixCategoryFilter")?.value||"";
- const parish=document.getElementById("matrixParishFilter")?.value||"";
- const status=document.getElementById("matrixStatusFilter")?.value||"";
  const sort=document.getElementById("matrixSort")?.value||"item-asc";
 
  const rows=matrixRows.filter(r=>{
    const hay=[r.proyecto,r.parroquia,r.estado_original,r.responsables,r.tramite]
      .join(" ").toLowerCase();
-   return (!q||hay.includes(q))
-     && (!cat||r.categoria===cat)
-     && (!parish||r.parroquia===parish)
-     && (!status||r.estado_dashboard===status);
+   return (!q||hay.includes(q)) && matrixRowMatchesMultiFilters(r);
  });
 
  rows.sort((a,b)=>{
@@ -3647,6 +5231,7 @@ async function downloadMatrixXlsx(){
      views:[{state:"frozen",ySplit:1}]
    });
 
+   const exportCustomFields=visibleCustomFields();
    const columns=[
      {header:"item",key:"item",width:7},
      {header:"categoria",key:"categoria",width:14},
@@ -3662,7 +5247,8 @@ async function downloadMatrixXlsx(){
      {header:"Avance",key:"avance",width:12},
      {header:"Coordenadas X",key:"coordenadas_x",width:22},
      {header:"Coordenadas Y",key:"coordenadas_y",width:22},
-     {header:"Área de Intervención",key:"area_intervencion",width:22}
+     {header:"Área de Intervención",key:"area_intervencion",width:22},
+     ...exportCustomFields.map(f=>({header:f.name,key:`custom_${f.id}`,width:24}))
    ];
    ws.columns=columns;
 
@@ -3686,7 +5272,8 @@ async function downloadMatrixXlsx(){
        avance:r.avance==null?null:progressDbValue(r.avance),
        coordenadas_x:r.coordenadas_x||"",
        coordenadas_y:r.coordenadas_y||"",
-       area_intervencion:r.area_intervencion||""
+       area_intervencion:r.area_intervencion||"",
+       ...Object.fromEntries(exportCustomFields.map(f=>[`custom_${f.id}`,getCustomValue(r.id,f.id)||""]))
      });
    });
 
@@ -3753,7 +5340,7 @@ async function downloadMatrixXlsx(){
    // Filtros, tal como una matriz de registro.
    ws.autoFilter={
      from:{row:1,column:1},
-     to:{row:rows.length+1,column:15}
+     to:{row:rows.length+1,column:columns.length}
    };
 
    // Validaciones de los campos normalizados.
@@ -3877,11 +5464,18 @@ async function showFocusedProjectPopup(row,loc){
    <span><b>Estado:</b> ${esc(groupedStatus(p))}</span><br>
    <span><b>Monto:</b> ${esc(amount(p)>0?moneyValue(amount(p)):"—")}</span><br>
    <span><b>Área de intervención:</b> ${esc(p["Área de Intervención"]||"—")}</span>
+   <div class="popup-streetview-wrap">
+     <button class="streetview-btn" type="button"
+       data-streetview-project="${esc(row.id)}"
+       data-streetview-location="0">◉ Street View</button>
+   </div>
  </div>`;
- new maplibregl.Popup({closeButton:true,offset:12})
+ const focusedPopup=new maplibregl.Popup({closeButton:true,offset:12})
    .setLngLat([loc.lng,loc.lat])
    .setHTML(htmlPopup)
    .addTo(projectMapInstance);
+
+ setTimeout(()=>wireStreetViewButtons(focusedPopup.getElement()),0);
 
  renderMapMediaPanel({
    proyecto:p.proyecto,
@@ -3893,9 +5487,15 @@ async function showFocusedProjectPopup(row,loc){
 
 function renderMatrix(){
  const tbody=document.getElementById("matrixBody");
+ const headerRow=document.getElementById("matrixHeaderRow");
  const count=document.getElementById("matrixRecordCount");
  const range=document.getElementById("matrixRangeLabel");
  if(!tbody) return;
+
+ const customCols=visibleCustomFields();
+ if(headerRow){
+   headerRow.innerHTML=`<th>N°</th><th>Proyecto</th><th>Parroquia</th><th>Categoría</th><th>Monto (USD)</th><th>Trámite</th><th>Descripción</th><th>Estado</th><th>Fecha prevista</th><th>Avance</th><th>Área de Intervención</th>${customCols.map(f=>`<th>${esc(f.name)}</th>`).join("")}<th>Acciones</th>`;
+ }
 
  fillMatrixParishes();
  const filteredRows=matrixFilteredRows();
@@ -3913,25 +5513,29 @@ function renderMatrix(){
 
  tbody.innerHTML=rows.length?rows.map(r=>{
    const hasMap=projectLocations(dbRowToProject(r)).length>0;
-   return `<tr>
-     <td data-label="Item">${String(r.item??"").padStart(2,"0")}</td>
-     <td class="matrix-project" data-label="Proyecto">${esc(r.proyecto||"")}</td>
-     <td data-label="Parroquia">${esc(r.parroquia||"—")}</td>
-     <td data-label="Categoría"><span class="matrix-category">${esc(r.categoria||"—")}</span></td>
-     <td data-label="Monto">${r.monto==null?"—":esc(new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(r.monto)||0))}</td>
-     <td class="matrix-description" data-label="Descripción">${esc(r.estado_original||"Sin descripción registrada")}</td>
-     <td data-label="Estado"><span class="matrix-status-pill" data-status="${esc(r.estado_dashboard||"")}">${esc(r.estado_dashboard||"—")}</span></td>
-     <td data-label="Fecha entrega">${esc(r.fecha_entrega||"—")}</td>
-     <td data-label="Avance">${r.avance==null?"—":esc(formatProgress(r.avance))}</td>
-     <td data-label="Área">${esc(r.area_intervencion||"—")}</td>
-     <td class="matrix-actions-cell" data-label="Acciones">
+   const matrixRowStatus=String(r.estado_dashboard||r.estado_original||"").trim();
+   return `<tr class="project-status-row" data-project-status="${esc(matrixRowStatus)}">
+     <td>${String(r.item??"").padStart(2,"0")}</td>
+     <td class="matrix-project">${esc(r.proyecto||"")}</td>
+     <td>${esc(r.parroquia||"—")}</td>
+     <td><span class="matrix-category">${esc(r.categoria||"—")}</span></td>
+     <td>${r.monto==null?"—":esc(new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(r.monto)||0))}</td>
+     <td class="matrix-description">${esc(r.tramite||"—")}</td>
+     <td class="matrix-description">${esc(r.estado_original||"Sin descripción registrada")}</td>
+     <td class="matrix-status-cell"><span class="matrix-status-pill" data-status="${esc(r.estado_dashboard||"")}">${esc(r.estado_dashboard||"—")}</span></td>
+     <td>${esc(r.fecha_entrega||"—")}</td>
+     <td>${r.avance==null?"—":esc(formatProgress(r.avance))}</td>
+     <td>${esc(r.area_intervencion||"—")}</td>
+     ${customCols.map(f=>`<td class="custom-field-cell">${esc(getCustomValue(r.id,f.id)||"—")}</td>`).join("")}
+     <td class="matrix-actions-cell">
        <button class="row-action detail" type="button" data-detail-item="${r.item}">◉ Ver detalle</button>
        <button class="row-action map" type="button" data-map-id="${r.id}" ${hasMap?"":"disabled"}>⌖ Ver en mapa</button>
+       <button class="row-action" type="button" data-streetview-project="${r.id}" ${hasMap?"":"disabled"}>◉ Street View</button>
        <button class="row-action edit" type="button" data-edit-id="${r.id}">✎ Editar</button>
        <button class="row-action delete" type="button" data-delete-id="${r.id}">🗑 Eliminar</button>
      </td>
    </tr>`;
- }).join(""):`<tr><td colspan="11" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
+ }).join(""):`<tr><td colspan="${12+customCols.length}" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
 
  tbody.querySelectorAll("[data-detail-item]").forEach(btn=>{
    btn.addEventListener("click",()=>openModal(btn.dataset.detailItem));
@@ -3939,7 +5543,8 @@ function renderMatrix(){
  tbody.querySelectorAll("[data-map-id]").forEach(btn=>{
    btn.addEventListener("click",()=>focusProjectOnMap(btn.dataset.mapId));
  });
- tbody.querySelectorAll("[data-edit-id]").forEach(btn=>{
+ wireStreetViewButtons(tbody);
+  tbody.querySelectorAll("[data-edit-id]").forEach(btn=>{
    btn.addEventListener("click",()=>{
      const row=matrixRows.find(r=>String(r.id)===String(btn.dataset.editId));
      if(row) openCrud(row);
@@ -3989,14 +5594,18 @@ async function syncAuthUI(){
  const login=document.getElementById("matrixLoginPanel");
  const panel=document.getElementById("matrixDataPanel");
  const add=document.getElementById("addProjectBtn");
+ const addField=document.getElementById("addCustomFieldBtn");
  const logout=document.getElementById("matrixLogoutBtn");
+ const sidebarLogout=document.getElementById("sidebarLogoutBtn");
 
  // La matriz es pública: siempre se muestra cuando Supabase está conectado.
  if(!dbReady){
    if(login) login.hidden=true;
    if(panel) panel.hidden=true;
    if(add) add.hidden=true;
+   if(addField) addField.hidden=true;
    if(logout) logout.hidden=true;
+   if(sidebarLogout) sidebarLogout.hidden=true;
    return;
  }
 
@@ -4009,7 +5618,13 @@ async function syncAuthUI(){
  // El botón Agregar permanece visible para todos; si no hay sesión,
  // solicitará credenciales al hacer clic.
  if(add) add.hidden=false;
- if(logout) logout.hidden=!currentSession;
+ if(addField){
+   addField.hidden=false;
+   addField.disabled=false;
+   if(window.customFieldsReady===false) addField.title="Reintentar conexión con campos personalizados";
+ }
+ if(logout) logout.hidden=true;
+ if(sidebarLogout) sidebarLogout.hidden=!currentSession;
 
  await refreshProjectsFromDatabase();
  renderMatrix();
@@ -4023,6 +5638,31 @@ function selectView(viewId){
    syncAuthUI();
  }
  window.scrollTo({top:0,behavior:"instant"});
+}
+
+
+function loadReportInfo(){
+ const cut=localStorage.getItem("gadmr_report_cut")||"Agosto 2026";
+ const reform=localStorage.getItem("gadmr_budget_reform")||"Reforma Presupuestaria N° 9";
+ document.getElementById("reportCutText").textContent=cut;
+ document.getElementById("budgetReformText").textContent=reform;
+}
+function openReportInfoEditor(){
+ document.getElementById("reportCutInput").value=document.getElementById("reportCutText").textContent;
+ document.getElementById("budgetReformInput").value=document.getElementById("budgetReformText").textContent;
+ const m=document.getElementById("reportInfoModal");
+ m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden";
+}
+function closeReportInfoEditor(){
+ const m=document.getElementById("reportInfoModal");
+ m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow="";
+}
+function saveReportInfo(){
+ const cut=document.getElementById("reportCutInput").value.trim()||"Agosto 2026";
+ const reform=document.getElementById("budgetReformInput").value.trim()||"Reforma Presupuestaria N° 9";
+ localStorage.setItem("gadmr_report_cut",cut);
+ localStorage.setItem("gadmr_budget_reform",reform);
+ loadReportInfo(); closeReportInfoEditor();
 }
 
 function bindAdminUI(){
@@ -4048,9 +5688,17 @@ function bindAdminUI(){
    }
  });
 
- document.getElementById("mobileNavTrigger")?.addEventListener("click",()=>{
-   document.body.classList.toggle("sidebar-mobile-open");
+ document.getElementById("streetViewClose")?.addEventListener("click",closeStreetView);
+ document.getElementById("streetViewModal")?.addEventListener("click",e=>{
+   if(e.target.dataset.streetviewClose) closeStreetView();
  });
+
+
+ document.getElementById("editReportInfoBtn")?.addEventListener("click",openReportInfoEditor);
+ document.getElementById("reportInfoClose")?.addEventListener("click",closeReportInfoEditor);
+ document.getElementById("reportInfoCancel")?.addEventListener("click",closeReportInfoEditor);
+ document.getElementById("reportInfoSave")?.addEventListener("click",saveReportInfo);
+ document.getElementById("reportInfoModal")?.addEventListener("click",e=>{if(e.target.dataset.reportClose)closeReportInfoEditor();});
 
  document.getElementById("dashboardParishFilter")?.addEventListener("change",applyDashboardParishFilter);
  document.getElementById("toggleParishesLayer")?.addEventListener("change",applyMapLayerVisibility);
@@ -4063,22 +5711,41 @@ function bindAdminUI(){
    if(e.key==="Enter") matrixLogin();
  });
  document.getElementById("matrixLogoutBtn")?.addEventListener("click",matrixLogout);
+ document.getElementById("sidebarLogoutBtn")?.addEventListener("click",matrixLogout);
+ document.getElementById("addCustomFieldBtn")?.addEventListener("click",openCustomFieldModal);
  document.getElementById("addProjectBtn")?.addEventListener("click",()=>openCrud());
  document.getElementById("matrixRefreshBtn")?.addEventListener("click",async()=>{
    await refreshProjectsFromDatabase();
    renderMatrix();
  });
+ document.getElementById("matrixFieldPickerBtn")?.addEventListener("click",e=>{
+   e.stopPropagation();
+   const p=document.getElementById("matrixFieldPicker");
+   const willOpen=p.hidden;
+   closeMatrixFilterPopovers();
+   p.hidden=!willOpen;
+   if(willOpen)renderMatrixFieldPicker();
+ });
+ document.getElementById("matrixValuePickerBtn")?.addEventListener("click",e=>{
+   e.stopPropagation();
+   const p=document.getElementById("matrixValuePicker");
+   const willOpen=p.hidden;
+   closeMatrixFilterPopovers();
+   p.hidden=!willOpen;
+   if(willOpen)renderMatrixValuePicker();
+ });
+ document.addEventListener("click",e=>{
+   if(!e.target.closest(".multi-filter"))closeMatrixFilterPopovers();
+ });
  document.getElementById("matrixSearch")?.addEventListener("input",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixCategoryFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixParishFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
- document.getElementById("matrixStatusFilter")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixSort")?.addEventListener("change",()=>{matrixCurrentPage=1;renderMatrix();});
  document.getElementById("matrixClearBtn")?.addEventListener("click",()=>{
    document.getElementById("matrixSearch").value="";
-   document.getElementById("matrixCategoryFilter").value="";
-   document.getElementById("matrixParishFilter").value="";
-   document.getElementById("matrixStatusFilter").value="";
+   matrixSelectedFields.clear();
+   matrixSelectedValues.clear();
    document.getElementById("matrixSort").value="item-asc";
+   closeMatrixFilterPopovers();
+   updateMatrixFilterButtons();
    matrixCurrentPage=1;
    renderMatrix();
  });
@@ -4098,6 +5765,12 @@ function bindAdminUI(){
  document.getElementById("mediaViewer")?.addEventListener("click",e=>{
    if(e.target.dataset.mediaClose) closeMediaViewer();
  });
+
+ document.getElementById("customFieldType")?.addEventListener("change",updateCustomFieldOptionsVisibility);
+ document.getElementById("customFieldClose")?.addEventListener("click",closeCustomFieldModal);
+ document.getElementById("customFieldCancel")?.addEventListener("click",closeCustomFieldModal);
+ document.getElementById("customFieldSave")?.addEventListener("click",createCustomField);
+ document.getElementById("customFieldModal")?.addEventListener("click",e=>{if(e.target.dataset.customFieldClose)closeCustomFieldModal();});
 
  document.getElementById("crudClose")?.addEventListener("click",closeCrud);
  document.getElementById("crudCancel")?.addEventListener("click",closeCrud);
@@ -4135,8 +5808,10 @@ function bindAdminUI(){
    }
    if(e.key==="Escape"){
      closeCrud();
+     closeCustomFieldModal();
      hideAuthPrompt();
      closeMediaViewer();
+     closeStreetView();
    }
  });
 
@@ -4149,6 +5824,7 @@ function bindAdminUI(){
 }
 
 async function init(){
+ loadReportInfo();
  await initDatabase();
 
  if(!dbReady){
@@ -4159,7 +5835,7 @@ async function init(){
 
  const dashboardSelect=document.getElementById("dashboardParishFilter");
  if(dashboardSelect){
-   fillSelect(dashboardSelect,unique("parroquia"));
+   fillSelect(dashboardSelect,dashboardParishOptions());
    currentDashboardParish=dashboardSelect.value||"";
  }
 
@@ -4196,6 +5872,96 @@ init().catch(err=>{
  }
 });
 </script>
+
+
+
+<div id="reportInfoModal" class="crud-modal" aria-hidden="true">
+  <div class="crud-backdrop" data-report-close="true"></div>
+  <div class="crud-dialog" style="width:min(520px,calc(100% - 28px));">
+    <div class="crud-head">
+      <h3>Editar corte de información</h3>
+      <button id="reportInfoClose" class="crud-close" type="button">×</button>
+    </div>
+    <div class="crud-form">
+      <div class="login-grid">
+        <label class="field-label">Corte de información
+          <input id="reportCutInput" class="field-control" type="text">
+        </label>
+        <label class="field-label">Reforma Presupuestaria
+          <input id="budgetReformInput" class="field-control" type="text">
+        </label>
+      </div>
+      <div class="crud-foot">
+        <button id="reportInfoCancel" class="matrix-btn" type="button">Cancelar</button>
+        <button id="reportInfoSave" class="matrix-btn primary" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="streetViewModal" class="streetview-modal" aria-hidden="true">
+  <div class="streetview-backdrop" data-streetview-close="true"></div>
+  <section class="streetview-dialog" role="dialog" aria-modal="true" aria-labelledby="streetViewTitle">
+    <div class="streetview-head">
+      <div class="streetview-head-copy">
+        <strong id="streetViewTitle">Street View</strong>
+        <span id="streetViewMeta">Buscando panorama disponible…</span>
+      </div>
+      <button id="streetViewClose" class="streetview-close" type="button" aria-label="Cerrar Street View">×</button>
+    </div>
+    <div class="streetview-body">
+      <div id="streetViewPanorama"></div>
+      <div id="streetViewStatus" class="streetview-status">Cargando Google Street View…</div>
+    </div>
+    <div class="streetview-footer">
+      Street View se abre en el panorama disponible más cercano a las coordenadas registradas del proyecto.
+    </div>
+  </section>
+</div>
+
+<div id="customFieldModal" class="crud-modal" aria-hidden="true">
+  <div class="crud-backdrop" data-custom-field-close="true"></div>
+  <div class="crud-dialog" style="width:min(760px,calc(100% - 28px));" role="dialog" aria-modal="true">
+    <div class="crud-head">
+      <h3>Agregar campo a todos los proyectos</h3>
+      <button id="customFieldClose" class="crud-close" type="button">×</button>
+    </div>
+    <div class="crud-form">
+      <div class="db-message">Puedes crear un campo nuevo o editar uno existente. Los cambios de título, opciones, visibilidad y posición se aplican a todos los proyectos.</div>
+      <div class="crud-grid">
+        <label class="field-label span2">Nombre del campo <span class="required-star">*</span>
+          <input id="customFieldName" class="field-control" type="text" placeholder="Ej. PAC de la Dirección">
+        </label>
+        <label class="field-label">Tipo
+          <select id="customFieldType" class="field-control">
+            <option value="select">Lista desplegable</option>
+            <option value="text">Texto</option>
+            <option value="number">Número</option>
+            <option value="date">Fecha</option>
+            <option value="boolean">Sí / No</option>
+          </select>
+        </label>
+        <label id="customFieldOptionsLabel" class="field-label span3">Opciones
+          <textarea id="customFieldOptions" class="field-control" placeholder="Una opción por línea.&#10;OBRAS PÚBLICAS&#10;AMBIENTE&#10;CULTURA&#10;PATRIMONIO"></textarea>
+        </label>
+        <label class="custom-check"><input id="customFieldShowMatrix" type="checkbox" checked> Mostrar en la Matriz</label>
+        <label class="custom-check"><input id="customFieldFilterable" type="checkbox" checked> Permitir filtro</label>
+        <label class="field-label">Posición de la columna
+          <input id="customFieldOrder" class="field-control" type="number" min="1" value="100">
+        </label>
+      </div>
+      <div style="margin-top:18px">
+        <h4 style="margin:0 0 8px;color:#0d2a5b">Campos existentes</h4>
+        <div id="customFieldExistingList" class="custom-field-existing-list"></div>
+      </div>
+      <div id="customFieldStatus" class="matrix-status"></div>
+      <div class="crud-foot">
+        <button id="customFieldCancel" class="matrix-btn" type="button">Cancelar</button>
+        <button id="customFieldSave" class="matrix-btn primary" type="button">Crear campo</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="crudModal" class="crud-modal" aria-hidden="true">
   <div class="crud-backdrop" data-crud-close="true"></div>
@@ -4273,6 +6039,12 @@ init().catch(err=>{
         <label class="field-label span2">Área de Intervención
           <textarea id="fAreaIntervencion" class="field-control" placeholder="Ej. 4615 m2, 0.75 km, NO o POR DEFINIR"></textarea>
         </label>
+        <section id="customFieldsFormSection" class="custom-fields-form-section span3">
+          <h4>Campos adicionales</h4>
+          <p>Los campos creados desde la Matriz aparecen aquí automáticamente.</p>
+          <div id="customFieldsFormGrid" class="custom-fields-form-grid"></div>
+        </section>
+
         <section class="media-manager" id="mediaManager">
           <h4>Archivos del proyecto</h4>
           <p class="media-help">Puedes adjuntar imágenes, PDF, videos MP4 y panoramas 360°. Para un proyecto nuevo, guárdalo primero y luego vuelve a editarlo para cargar archivos.</p>
