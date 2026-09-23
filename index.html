@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d2a5b">
-  <meta name="dashboard-version" content="V29.9">
+  <meta name="dashboard-version" content="V29.9.4">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -2595,25 +2595,29 @@
 .mobile-nav-toggle{display:none}
 .mobile-nav-backdrop{display:none}
 @media(max-width:900px){
+  .top-header{position:relative !important}
   .mobile-nav-toggle{
-    display:flex !important;position:fixed !important;left:16px !important;top:235px !important;bottom:auto !important;z-index:2147483647 !important;
+    display:flex !important;position:absolute !important;left:16px !important;top:118px !important;bottom:auto !important;z-index:30 !important;
     width:auto;min-width:92px;height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.38);border-radius:12px;align-items:center;justify-content:center;gap:8px;
     background:#0b3569;color:#fff;font-size:15px;font-weight:800;font-family:Arial,sans-serif;
     box-shadow:0 5px 18px rgba(0,0,0,.28);cursor:pointer;
   }
   .mobile-nav-toggle::after{content:" Menú";font-size:14px;font-weight:800}
-  body.sidebar-mobile-open .mobile-nav-toggle{left:240px !important;background:#fff;color:#0b3569;border:1px solid #d6e0eb}
-  body.sidebar-mobile-open .mobile-nav-toggle::after{content:" Cerrar"}
+  body.sidebar-mobile-open .mobile-nav-toggle{visibility:hidden !important;pointer-events:none !important}
   .mobile-nav-backdrop{position:fixed;inset:0;background:rgba(5,22,43,.42);z-index:9998}
   body.sidebar-mobile-open .mobile-nav-backdrop{display:block}
   .admin-sidebar{z-index:10010 !important;box-shadow:8px 0 24px rgba(0,0,0,.18)}
 }
+
+@media(max-width:390px){
+  .mobile-nav-toggle{top:112px !important;left:14px !important}
+}
+
 </style>
 
 </head>
 <body class="sidebar-collapsed">
 
-  <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
   <div class="mobile-nav-backdrop" id="mobileNavBackdrop" aria-hidden="true"></div>
 
   <aside class="admin-sidebar" id="adminSidebar" aria-label="Panel de navegación">
@@ -2649,6 +2653,7 @@
         <p>Jefatura de Diseño de la Obra Pública</p>
       </div>
     </div>
+    <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
     <div class="report-date report-date-v296">
       <svg viewBox="0 0 24 24"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v14A1.5 1.5 0 0 1 19 21.5H5A1.5 1.5 0 0 1 3.5 20V6A1.5 1.5 0 0 1 5 4.5Z"/></svg>
       <div class="report-date-content">
