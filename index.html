@@ -12,6 +12,7 @@
   <link rel="icon" type="image/png" href="./assets/favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://unpkg.com/@mapbox/shp-write@0.4.3/shpwrite.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js"></script>
   <script src="./google-maps-config.js"></script>
@@ -2768,6 +2769,7 @@
       </div>
       <div class="matrix-actions">
         <button id="downloadMatrixXlsx" class="matrix-btn" type="button">⇩ Descargar Matriz (.xlsx)</button>
+        <button id="downloadMatrixShp" class="matrix-btn" type="button">⇩ Descargar SHP (.zip)</button>
         <button id="addCustomFieldBtn" class="matrix-btn" type="button" hidden>+ Agregar campo</button>
         <button id="addProjectBtn" class="matrix-btn primary" type="button" hidden>+ Agregar proyecto</button>
         <span id="dbConnectionBadge" class="connection-badge" hidden>Base no configurada</span>
@@ -5377,6 +5379,89 @@ function matrixFilteredRows(){
 }
 
 
+async function downloadMatrixShp(){
+ const btn=document.getElementById("downloadMatrixShp");
+ const oldText=btn?.textContent;
+ if(typeof shpwrite==="undefined"){
+   alert("No se pudo cargar el componente de exportación SHP. Verifica la conexión a Internet e inténtalo nuevamente.");
+   return;
+ }
+ if(typeof proj4==="undefined"){
+   alert("No se pudo cargar el componente de proyección cartográfica.");
+   return;
+ }
+ if(btn){btn.disabled=true;btn.textContent="Generando SHP…";}
+ try{
+   proj4.defs("EPSG:32717","+proj=utm +zone=17 +south +datum=WGS84 +units=m +no_defs +type=crs");
+   const rows=matrixFilteredRows();
+   const features=[];
+   let omitted=0;
+
+   for(const r of rows){
+     const p=dbRowToProject(r);
+     const locs=projectLocations(p);
+     if(!locs.length){omitted++;continue;}
+
+     locs.forEach((loc,index)=>{
+       const utm=proj4("EPSG:4326","EPSG:32717",[Number(loc.lng),Number(loc.lat)]);
+       features.push({
+         type:"Feature",
+         geometry:{type:"Point",coordinates:[utm[0],utm[1]]},
+         properties:{
+           ITEM:Number(r.item)||0,
+           PUNTO:index+1,
+           CATEGORIA:String(r.categoria||"").slice(0,30),
+           PARROQUIA:String(r.parroquia||"").slice(0,60),
+           PROYECTO:String(r.proyecto||"").slice(0,254),
+           MONTO:Number(r.monto)||0,
+           TRAMITE:String(r.tramite||"").slice(0,30),
+           RESPONSAB:String(r.responsables||"").slice(0,254),
+           EST_ORIG:String(r.estado_original||"").slice(0,254),
+           ESTADO:String(r.estado_dashboard||"").slice(0,80),
+           F_ENTREGA:String(r.fecha_entrega||"").slice(0,60),
+           CRONOGRAMA:String(r.cronograma_contractual||"").slice(0,80),
+           AVANCE:r.avance==null?0:Number(r.avance)||0,
+           COORD_X:Number(utm[0].toFixed(4)),
+           COORD_Y:Number(utm[1].toFixed(4)),
+           AREA_INT:String(r.area_intervencion||"").slice(0,254)
+         }
+       });
+     });
+   }
+
+   if(!features.length){
+     alert("No hay proyectos con coordenadas válidas dentro de los filtros actuales.");
+     return;
+   }
+
+   const prj='PROJCS["WGS_1984_UTM_Zone_17S",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",10000000.0],PARAMETER["Central_Meridian",-81.0],PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]';
+   const geojson={type:"FeatureCollection",features};
+   const zipData=await shpwrite.zip(geojson,{
+     folder:"Proyectos_PHDU_GADMR",
+     filename:"Proyectos_PHDU_GADMR",
+     outputType:"blob",
+     compression:"DEFLATE",
+     prj,
+     types:{point:"Proyectos_PHDU_GADMR"}
+   });
+   const blob=zipData instanceof Blob?zipData:new Blob([zipData],{type:"application/zip"});
+   const date=new Date();
+   const stamp=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement("a");
+   a.href=url;
+   a.download=`Proyectos_PHDU_GADMR_${stamp}.zip`;
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),2000);
+   if(omitted) console.info(`Exportación SHP: ${omitted} proyecto(s) sin coordenadas fueron omitidos.`);
+ }catch(err){
+   console.error("Exportación SHP:",err);
+   alert(`No se pudo generar el SHP: ${err.message||err}`);
+ }finally{
+   if(btn){btn.disabled=false;btn.textContent=oldText||"⇩ Descargar SHP (.zip)";}
+ }
+}
+
 async function downloadMatrixXlsx(){
  if(typeof ExcelJS==="undefined"){
    alert("No se pudo cargar el componente de exportación Excel.");
@@ -5884,6 +5969,7 @@ function bindAdminUI(){
  document.getElementById("toggleParishesLayer")?.addEventListener("change",applyMapLayerVisibility);
  document.getElementById("togglePlatformsLayer")?.addEventListener("change",applyMapLayerVisibility);
  document.getElementById("downloadMatrixXlsx")?.addEventListener("click",downloadMatrixXlsx);
+ document.getElementById("downloadMatrixShp")?.addEventListener("click",downloadMatrixShp);
 
  document.getElementById("matrixLoginBtn")?.addEventListener("click",matrixLogin);
  document.getElementById("matrixLoginCancelBtn")?.addEventListener("click",()=>{pendingProtectedAction=null;hideAuthPrompt();});
