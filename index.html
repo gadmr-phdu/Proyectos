@@ -45,6 +45,9 @@
     .header-divider{width:1px;height:56px;background:rgba(255,255,255,.48)}
     .header-title h1{font-size:31px;line-height:1;margin:0 0 9px;white-space:nowrap}
     .header-title p{margin:0;font-size:14px;color:#e7edf7}
+    .header-title h1{font-size:34px;line-height:1.05;margin:0 0 7px;white-space:nowrap;text-transform:none}
+    .header-title .header-department{margin:0 0 3px;font-size:11px;line-height:1.2;font-weight:700;color:#e7edf7;letter-spacing:.15px}
+    .header-title .header-unit{margin:0;font-size:10px;line-height:1.2;font-weight:400;color:#d7dfed}
     .report-date{display:flex;align-items:center;gap:13px;padding-left:28px;border-left:1px solid rgba(255,255,255,.45);min-width:220px}
     .report-date svg{width:29px;height:29px;fill:none;stroke:#fff;stroke-width:1.5}
     .report-date span,.report-date strong{display:block}
@@ -2503,8 +2506,10 @@
   .top-brand{align-items:flex-start !important;gap:10px !important}
   .header-logo{width:min(230px,68vw) !important;max-width:68vw !important}
   .header-title{min-width:0 !important}
-  .header-title h1{font-size:16px !important;line-height:1.15 !important}
-  .header-title p{font-size:9px !important;line-height:1.25 !important}
+  .header-title h1{font-size:24px !important;line-height:1.05 !important;margin-bottom:5px !important}
+  .header-title p{font-size:9px !important;line-height:1.2 !important}
+  .header-title .header-department{font-size:8px !important;line-height:1.15 !important;margin-bottom:2px !important}
+  .header-title .header-unit{font-size:8px !important;line-height:1.15 !important}
   .report-date-v296{
     width:100% !important;
     max-width:none !important;
@@ -2650,8 +2655,9 @@
       <img src="./assets/logo-riobamba-negativo.png" alt="Riobamba - Alcaldía de la Gente" class="header-logo">
       <div class="header-divider"></div>
       <div class="header-title">
-        <h1>DIRECCIÓN DE GESTIÓN DE PLANIFICACIÓN, HÁBITAT Y DESARROLLO URBANÍSTICO</h1>
-        <p>Jefatura de Diseño de la Obra Pública</p>
+        <h1>Taller Urbano</h1>
+        <p class="header-department">DIRECCIÓN DE GESTIÓN DE PLANIFICACIÓN, HÁBITAT Y DESARROLLO URBANÍSTICO</p>
+        <p class="header-unit">Jefatura de Diseño de la Obra Pública</p>
       </div>
     </div>
     <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
