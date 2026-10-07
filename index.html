@@ -2627,6 +2627,13 @@
 .topbar h1{font-size:34px !important;line-height:1.05 !important;font-weight:800 !important;letter-spacing:.4px !important;}
 @media(max-width:900px){.topbar h1{font-size:30px !important;line-height:1.05 !important;}}
 </style>
+
+<style id="v29-informe-tecnico-status">
+.status-pill[data-status="Informe Técnico"],
+.matrix-status-pill[data-status="Informe Técnico"]{background:#6f42c1!important;color:#fff!important}
+.parish-project-status[data-status="Informe Técnico"]{background:#6f42c1!important;color:#fff!important}
+#matrixDataPanel tr[data-project-status="Informe Técnico"] td.matrix-status-cell .matrix-status-pill{background:#6f42c1!important;color:#fff!important}
+</style>
 </head>
 <body class="sidebar-collapsed">
 
@@ -3443,7 +3450,7 @@ function renderCharts(){
    ? projects.filter(p=>dashboardParishMatches(p.parroquia,selectedParish))
    : projects;
 
- const order=["En desarrollo","Entregado para Contratación","Remitido a otra dirección","No iniciado"];
+ const order=["En desarrollo","Informe Técnico","Entregado para Contratación","Remitido a otra dirección","No iniciado"];
  const sc=Object.fromEntries(order.map(s=>[s,0]));
  data.forEach(p=>{
    const s=groupedStatus(p);
@@ -5291,7 +5298,7 @@ function matrixFilterDefinitions(){
  const base=[
    {key:"categoria",label:"Categoría",values:()=>["PAC","Fuera del PAC"]},
    {key:"parroquia",label:"Parroquia",values:()=>[...new Set(matrixRows.map(r=>r.parroquia).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))},
-   {key:"estado",label:"Estado",values:()=>["En desarrollo","Entregado para Contratación","Remitido a otra dirección","No iniciado"]},
+   {key:"estado",label:"Estado",values:()=>["En desarrollo","Informe Técnico","Entregado para Contratación","Remitido a otra dirección","No iniciado"]},
    {key:"coordenadas",label:"Coordenadas",values:()=>["Con coordenadas","Sin coordenadas"]}
  ];
  filterableCustomFields().forEach(f=>base.push({
@@ -5618,7 +5625,7 @@ async function downloadMatrixXlsx(){
      ws.getCell(`I${row}`).dataValidation={
        type:"list",
        allowBlank:true,
-       formulae:['"En desarrollo,Entregado para Contratación,Remitido a otra dirección,No iniciado"']
+       formulae:['"En desarrollo,Informe Técnico,Entregado para Contratación,Remitido a otra dirección,No iniciado"']
      };
    }
 
@@ -6289,6 +6296,7 @@ init().catch(err=>{
         <label class="field-label">Estado Dashboard <span class="required-star">*</span>
           <select id="fEstadoDashboard" class="field-control" required>
             <option value="En desarrollo">En desarrollo</option>
+            <option value="Informe Técnico">Informe Técnico</option>
             <option value="Entregado para Contratación">Entregado para Contratación</option>
             <option value="Remitido a otra dirección">Remitido a otra dirección</option>
             <option value="No iniciado">No iniciado</option>
