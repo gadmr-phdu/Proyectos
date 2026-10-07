@@ -2634,7 +2634,7 @@
 .parish-project-status[data-status="Informe Técnico"]{background:#6f42c1!important;color:#fff!important}
 #matrixDataPanel tr[data-project-status="Informe Técnico"] td.matrix-status-cell .matrix-status-pill{background:#6f42c1!important;color:#fff!important}
 </style>
-<!-- V29.9.9 · Nombre Proyecto + Nombre Proceso Contratación -->
+<!-- V29.9.10 · Tabla principal reajustada: Proceso Contratación oculto solo en matriz -->
 </head>
 <body class="sidebar-collapsed">
 
@@ -2861,7 +2861,6 @@
             <tr id="matrixHeaderRow">
               <th>N°</th>
               <th>Nombre Proyecto</th>
-              <th>Nombre Proceso Contratación</th>
               <th>Parroquia</th>
               <th>Categoría</th>
               <th>Monto (USD)</th>
@@ -5780,7 +5779,7 @@ function renderMatrix(){
 
  const customCols=visibleCustomFields();
  if(headerRow){
-   headerRow.innerHTML=`<th>N°</th><th>Nombre Proyecto</th><th>Nombre Proceso Contratación</th><th>Parroquia</th><th>Categoría</th><th>Monto (USD)</th><th>Trámite</th><th>Descripción</th><th>Estado</th><th>Fecha prevista</th><th>Avance</th><th>Área de Intervención</th>${customCols.map(f=>`<th>${esc(f.name)}</th>`).join("")}<th>Acciones</th>`;
+   headerRow.innerHTML=`<th>N°</th><th>Nombre Proyecto</th><th>Parroquia</th><th>Categoría</th><th>Monto (USD)</th><th>Trámite</th><th>Descripción</th><th>Estado</th><th>Fecha prevista</th><th>Avance</th><th>Área de Intervención</th>${customCols.map(f=>`<th>${esc(f.name)}</th>`).join("")}<th>Acciones</th>`;
  }
 
  fillMatrixParishes();
@@ -5803,7 +5802,6 @@ function renderMatrix(){
    return `<tr class="project-status-row" data-project-status="${esc(matrixRowStatus)}">
      <td>${String(r.item??"").padStart(2,"0")}</td>
      <td class="matrix-project">${esc(r.nombre_proyecto||r.proyecto||"")}</td>
-     <td class="matrix-description">${esc(r.proyecto||"—")}</td>
      <td>${esc(r.parroquia||"—")}</td>
      <td><span class="matrix-category">${esc(r.categoria||"—")}</span></td>
      <td>${r.monto==null?"—":esc(new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(r.monto)||0))}</td>
@@ -5822,7 +5820,7 @@ function renderMatrix(){
        <button class="row-action delete" type="button" data-delete-id="${r.id}">🗑 Eliminar</button>
      </td>
    </tr>`;
- }).join(""):`<tr><td colspan="${13+customCols.length}" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
+ }).join(""):`<tr><td colspan="${12+customCols.length}" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
 
  tbody.querySelectorAll("[data-detail-item]").forEach(btn=>{
    btn.addEventListener("click",()=>openModal(btn.dataset.detailItem));
