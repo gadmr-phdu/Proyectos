@@ -2634,6 +2634,7 @@
 .parish-project-status[data-status="Informe Técnico"]{background:#6f42c1!important;color:#fff!important}
 #matrixDataPanel tr[data-project-status="Informe Técnico"] td.matrix-status-cell .matrix-status-pill{background:#6f42c1!important;color:#fff!important}
 </style>
+<!-- V29.9.9 · Nombre Proyecto + Nombre Proceso Contratación -->
 </head>
 <body class="sidebar-collapsed">
 
@@ -2819,7 +2820,7 @@
     <div id="matrixDataPanel" class="matrix-card" hidden>
       <div class="matrix-toolbar matrix-toolbar-v29">
         <label class="matrix-search-field">Buscar
-          <input id="matrixSearch" type="search" placeholder="Buscar proyecto o parroquia…">
+          <input id="matrixSearch" type="search" placeholder="Buscar nombre, proceso, parroquia…">
         </label>
 
         <div class="multi-filter">
@@ -2859,7 +2860,8 @@
           <thead>
             <tr id="matrixHeaderRow">
               <th>N°</th>
-              <th>Proyecto</th>
+              <th>Nombre Proyecto</th>
+              <th>Nombre Proceso Contratación</th>
               <th>Parroquia</th>
               <th>Categoría</th>
               <th>Monto (USD)</th>
@@ -3374,14 +3376,14 @@ function renderParishProjectList(data,parish){
  const sorted=data.slice().sort((a,b)=>{
    const sa=groupedStatus(a), sb=groupedStatus(b);
    if(sa!==sb) return sa.localeCompare(sb,"es");
-   return String(a.proyecto||"").localeCompare(String(b.proyecto||""),"es");
+   return displayProjectName(a).localeCompare(displayProjectName(b),"es");
  });
 
  wrap.innerHTML=sorted.length
    ? sorted.map(p=>`
       <div class="parish-project-item">
         <div>
-          <strong>${esc(p.proyecto||"Proyecto sin nombre")}</strong>
+          <strong>${esc(displayProjectName(p))}</strong>
           <small>${amount(p)>0?moneyValue(amount(p)):"Sin presupuesto"} · ${formatProgress(p.Avance)}</small>
         </div>
         <span class="parish-project-status" data-status="${esc(groupedStatus(p))}">${esc(groupedStatus(p))}</span>
@@ -3539,7 +3541,7 @@ function renderCharts(){
      .sort((a,b)=>amount(b)-amount(a));
 
    labels=projectRefs.map((p,i)=>{
-     const name=String(p.proyecto||`Proyecto ${i+1}`).trim();
+     const name=String(displayProjectName(p)||`Proyecto ${i+1}`).trim();
      return name;
    });
    values=projectRefs.map(p=>amount(p));
@@ -3600,7 +3602,7 @@ function renderCharts(){
       callbacks:{
         title:items=>{
           if(selectedParish){
-            return projectRefs[items[0].dataIndex]?.proyecto||"Proyecto";
+            return displayProjectName(projectRefs[items[0].dataIndex]);
           }
           return items[0].label;
         },
@@ -3646,7 +3648,7 @@ function openParishInvestmentModal(parish){
    <div class="parish-list">
      ${list.map((p,i)=>`
        <div class="project-invest-row">
-         <div class="project-invest-name"><strong>${i+1}. ${esc(p.proyecto)}</strong></div>
+         <div class="project-invest-name"><strong>${i+1}. ${esc(displayProjectName(p))}</strong></div>
          <div class="project-invest-amount">${esc(amount(p)>0?moneyValue(amount(p)):(p.monto||"Sin presupuesto"))}</div>
        </div>`).join("")}
    </div>`;
@@ -3760,7 +3762,8 @@ function buildProjectGeoJSON(data=projects){
        properties:{
          project_id:String(p.id??""),
          item:String(p.item??i+1),
-         proyecto:p.proyecto||"",
+         proyecto:displayProjectName(p),
+         proceso_contratacion:p.proyecto||"",
          ubicacion:locs.length>1?loc.label:"",
          parroquia:p.parroquia||"",
          categoria:displayCategory(p.categoria),
@@ -4190,6 +4193,7 @@ async function renderProjectMap(){
      const htmlPopup=`
        <div style="min-width:250px">
          <strong>${esc(p.proyecto)}</strong><br>
+         ${p.proceso_contratacion?`<span><b>Nombre Proceso Contratación:</b> ${esc(p.proceso_contratacion)}</span><br>`:""}
          ${p.ubicacion?`<span><b>Ubicación:</b> ${esc(p.ubicacion)}</span><br>`:""}
          <span><b>Parroquia:</b> ${esc(p.parroquia||"—")}</span><br>
          <span><b>Categoría:</b> ${esc(p.categoria||"—")}</span><br>
@@ -4255,7 +4259,7 @@ async function renderProjectMap(){
 function filtered(){
  const q=els.search.value.trim().toLocaleLowerCase("es");
  return projects.filter(p=>{
-  const hay=[p.proyecto,p.parroquia,p.estado_original,p.responsables].join(" ").toLocaleLowerCase("es");
+  const hay=[p.nombre_proyecto,p.proyecto,p.parroquia,p.estado_original,p.responsables].join(" ").toLocaleLowerCase("es");
   return(!q||hay.includes(q))&&(!els.category.value||p.categoria===els.category.value)&&(!els.parish.value||p.parroquia===els.parish.value)&&(!els.status.value||groupedStatus(p)===els.status.value);
  });
 }
@@ -4264,7 +4268,7 @@ function renderTable(){
  const start=(currentPage-1)*pageSize,end=Math.min(start+pageSize,list.length),page=list.slice(start,end);
  els.range.textContent=list.length?`Mostrando ${start+1} a ${end} de ${list.length} proyectos`:"No hay proyectos para mostrar";
  els.body.innerHTML=page.length?page.map(p=>`<tr>
-  <td>${String(p.item).padStart(2,"0")}</td><td><div class="project-title">${esc(p.proyecto)}</div></td><td>${esc(p.parroquia||"—")}</td>
+  <td>${String(p.item).padStart(2,"0")}</td><td><div class="project-title">${esc(displayProjectName(p))}</div></td><td>${esc(p.proyecto||"—")}</td><td>${esc(p.parroquia||"—")}</td>
   <td><span class="tag">${esc(displayCategory(p.categoria))}</span></td><td>${esc(moneyCell(p))}</td>
   <td><div class="description-cell">${esc(p.estado_original||"Sin descripción registrada")}</div></td>
   <td><span class="status-pill" data-status="${esc(groupedStatus(p))}">${esc(groupedStatus(p))}</span></td>
@@ -4281,7 +4285,8 @@ function renderPagination(totalPages){
 function detail(label,value,full=false){return `<div class="detail ${full?"full":""}"><span>${esc(label)}</span><strong>${esc(value||"Sin información registrada")}</strong></div>`;}
 function openModal(item){
  const p=projects.find(x=>String(x.item)===String(item));if(!p)return;
- els.modalContent.innerHTML=`<p class="modal-kicker">Proyecto ${esc(p.item)} · ${esc(displayCategory(p.categoria))}</p><h3 id="modalTitle">${esc(p.proyecto)}</h3><div class="detail-grid">
+ els.modalContent.innerHTML=`<p class="modal-kicker">Proyecto ${esc(p.item)} · ${esc(displayCategory(p.categoria))}</p><h3 id="modalTitle">${esc(displayProjectName(p))}</h3><div class="detail-grid">
+ ${detail("Nombre Proceso Contratación",p.proyecto,true)}
  ${detail("Parroquia",p.parroquia)}
  ${detail("Monto",amount(p)>0?moneyValue(amount(p)):(p.monto||"Sin información registrada"))}
  ${detail("Número de trámite",p.tramite)}
@@ -4623,6 +4628,10 @@ async function createCustomField(){
  }
 }
 
+function displayProjectName(p){
+ return String(p?.nombre_proyecto||p?.proyecto||"Proyecto sin nombre").trim();
+}
+
 function dbRowToProject(r){
  return {
    ...r,
@@ -4671,6 +4680,7 @@ function projectToDbPayload(){
    item:Number(document.getElementById("fItem").value),
    categoria:document.getElementById("fCategoria").value,
    parroquia:document.getElementById("fParroquia").value.trim(),
+   nombre_proyecto:document.getElementById("fNombreProyecto").value.trim()||null,
    proyecto:document.getElementById("fProyecto").value.trim(),
    monto:montoRaw===""?null:Number(montoRaw),
    tramite:document.getElementById("fTramite").value.trim(),
@@ -4691,6 +4701,7 @@ function setFormFromRow(r){
  document.getElementById("fItem").value=r?.item??nextProjectItem();
  document.getElementById("fCategoria").value=r?.categoria||"PAC";
  document.getElementById("fParroquia").value=r?.parroquia||"";
+ document.getElementById("fNombreProyecto").value=r?.nombre_proyecto||"";
  document.getElementById("fProyecto").value=r?.proyecto||"";
  document.getElementById("fMonto").value=r?.monto??"";
  document.getElementById("fTramite").value=r?.tramite||"";
@@ -4783,7 +4794,7 @@ async function saveProject(evt){
  const payload=projectToDbPayload();
 
  if(!payload.item || !payload.proyecto){
-   status.textContent="Item y Proyecto son obligatorios.";
+   status.textContent="Item y Nombre Proceso Contratación son obligatorios.";
    return;
  }
 
@@ -4920,7 +4931,7 @@ function renderMapMediaPanel(projectProps,media){
  const openBtn=document.getElementById("mapMediaOpenTop");
  if(!panel||!body) return;
 
- title.textContent=projectProps?.proyecto||"Archivos del proyecto";
+ title.textContent=projectProps?.nombre_proyecto||projectProps?.proyecto||"Archivos del proyecto";
  meta.textContent=[projectProps?.parroquia||"",projectProps?.estado||""].filter(Boolean).join(" · ");
 
  mapMediaCarouselItems=media||[];
@@ -5431,7 +5442,8 @@ async function downloadMatrixShp(){
            PUNTO:index+1,
            CATEGORIA:String(r.categoria||"").slice(0,30),
            PARROQUIA:String(r.parroquia||"").slice(0,60),
-           PROYECTO:String(r.proyecto||"").slice(0,254),
+           NOM_PROY:String(r.nombre_proyecto||r.proyecto||"").slice(0,254),
+           NOM_PROCES:String(r.proyecto||"").slice(0,254),
            MONTO:Number(r.monto)||0,
            TRAMITE:String(r.tramite||"").slice(0,30),
            RESPONSAB:String(r.responsables||"").slice(0,254),
@@ -5508,7 +5520,8 @@ async function downloadMatrixXlsx(){
      {header:"item",key:"item",width:7},
      {header:"categoria",key:"categoria",width:14},
      {header:"parroquia",key:"parroquia",width:16},
-     {header:"proyecto",key:"proyecto",width:39},
+     {header:"nombre_proyecto",key:"nombre_proyecto",width:28},
+     {header:"nombre_proceso_contratacion",key:"proyecto",width:45},
      {header:"monto",key:"monto",width:16},
      {header:"tramite",key:"tramite",width:24},
      {header:"responsables",key:"responsables",width:28},
@@ -5533,6 +5546,7 @@ async function downloadMatrixXlsx(){
        item:r.item??"",
        categoria:r.categoria||"",
        parroquia:r.parroquia||"",
+       nombre_proyecto:r.nombre_proyecto||r.proyecto||"",
        proyecto:r.proyecto||"",
        monto:r.monto==null?null:Number(r.monto),
        tramite:r.tramite||"",
@@ -5766,7 +5780,7 @@ function renderMatrix(){
 
  const customCols=visibleCustomFields();
  if(headerRow){
-   headerRow.innerHTML=`<th>N°</th><th>Proyecto</th><th>Parroquia</th><th>Categoría</th><th>Monto (USD)</th><th>Trámite</th><th>Descripción</th><th>Estado</th><th>Fecha prevista</th><th>Avance</th><th>Área de Intervención</th>${customCols.map(f=>`<th>${esc(f.name)}</th>`).join("")}<th>Acciones</th>`;
+   headerRow.innerHTML=`<th>N°</th><th>Nombre Proyecto</th><th>Nombre Proceso Contratación</th><th>Parroquia</th><th>Categoría</th><th>Monto (USD)</th><th>Trámite</th><th>Descripción</th><th>Estado</th><th>Fecha prevista</th><th>Avance</th><th>Área de Intervención</th>${customCols.map(f=>`<th>${esc(f.name)}</th>`).join("")}<th>Acciones</th>`;
  }
 
  fillMatrixParishes();
@@ -5788,7 +5802,8 @@ function renderMatrix(){
    const matrixRowStatus=String(r.estado_dashboard||r.estado_original||"").trim();
    return `<tr class="project-status-row" data-project-status="${esc(matrixRowStatus)}">
      <td>${String(r.item??"").padStart(2,"0")}</td>
-     <td class="matrix-project">${esc(r.proyecto||"")}</td>
+     <td class="matrix-project">${esc(r.nombre_proyecto||r.proyecto||"")}</td>
+     <td class="matrix-description">${esc(r.proyecto||"—")}</td>
      <td>${esc(r.parroquia||"—")}</td>
      <td><span class="matrix-category">${esc(r.categoria||"—")}</span></td>
      <td>${r.monto==null?"—":esc(new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(r.monto)||0))}</td>
@@ -5807,7 +5822,7 @@ function renderMatrix(){
        <button class="row-action delete" type="button" data-delete-id="${r.id}">🗑 Eliminar</button>
      </td>
    </tr>`;
- }).join(""):`<tr><td colspan="${12+customCols.length}" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
+ }).join(""):`<tr><td colspan="${13+customCols.length}" style="padding:30px;text-align:center;color:#667085">No existen proyectos con los filtros seleccionados.</td></tr>`;
 
  tbody.querySelectorAll("[data-detail-item]").forEach(btn=>{
    btn.addEventListener("click",()=>openModal(btn.dataset.detailItem));
@@ -5825,7 +5840,7 @@ function renderMatrix(){
  tbody.querySelectorAll("[data-delete-id]").forEach(btn=>{
    btn.addEventListener("click",()=>{
      const row=matrixRows.find(r=>String(r.id)===String(btn.dataset.deleteId));
-     if(row) deleteProject(row.id,row.proyecto);
+     if(row) deleteProject(row.id,row.nombre_proyecto||row.proyecto);
    });
  });
 
@@ -6273,7 +6288,11 @@ init().catch(err=>{
           <input id="fParroquia" class="field-control" type="text">
         </label>
 
-        <label class="field-label span3">Proyecto <span class="required-star">*</span>
+        <label class="field-label span3">Nombre Proyecto
+          <textarea id="fNombreProyecto" class="field-control" placeholder="Nombre corto y fácil de recordar para mostrar en el mapa"></textarea>
+        </label>
+
+        <label class="field-label span3">Nombre Proceso Contratación <span class="required-star">*</span>
           <textarea id="fProyecto" class="field-control" required></textarea>
         </label>
 
