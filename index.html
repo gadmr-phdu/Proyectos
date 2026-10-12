@@ -2453,6 +2453,27 @@
   background-color:#fff !important;
 }
 
+
+/* V29.10.0 - Control eGOB privado */
+.control-auth-card{padding:28px;max-width:740px;margin:22px auto}
+.control-auth-card h3{margin:0 0 8px;color:#0d2a5b}
+.control-login-grid{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:12px;margin-top:16px}
+.control-login-grid .field-label{display:flex;flex-direction:column;gap:6px}
+.control-login-grid input{width:100%;min-width:0}
+.control-message{color:#b42318;min-height:20px}
+.control-scroll{width:100%;overflow:auto;max-height:65vh}
+.control-table{border-collapse:separate;border-spacing:0;width:100%;min-width:1550px;font-size:12px}
+.control-table th{position:sticky;top:0;z-index:1;background:#eaf0f9;color:#0d2a5b;text-align:left;padding:12px 10px;white-space:nowrap;border-bottom:2px solid #d7e1ee}
+.control-table td{padding:10px;border-bottom:1px solid #e8edf3;vertical-align:top;max-width:330px;overflow-wrap:anywhere}
+.control-table tbody tr:nth-child(even){background:#f8fafd}
+.control-table tbody tr:hover{background:#eff5ff}
+.control-table a{color:#1458ae;font-weight:700}
+.control-move{font-weight:700;color:#173c70}
+.control-empty{padding:30px!important;text-align:center;color:#64748b}
+.control-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;flex-wrap:wrap}
+.control-bottom>div{display:flex;gap:10px;align-items:center}
+.control-hint{padding:0 16px 12px;font-size:12px;color:#667085}
+@media(max-width:720px){.control-login-grid{grid-template-columns:1fr}.control-auth-card{margin:12px 0;padding:18px}}
 </style>
 
 <style id="v299-responsive-equal-universes">
@@ -2652,6 +2673,9 @@
       <button class="side-tab" id="tabMatrix" type="button" data-view="matrixView">
         <span class="side-icon">▦</span><span class="side-text">Matriz de Proyectos</span>
       </button>
+      <button class="side-tab" id="tabControl" type="button" data-view="controlView">
+        <span class="side-icon">◷</span><span class="side-text">Control eGOB</span>
+      </button>
     </nav>
     <div class="sidebar-foot sidebar-session-foot">
       <button id="sidebarLogoutBtn" class="sidebar-logout-btn" type="button" hidden title="Cerrar sesión">
@@ -2780,6 +2804,31 @@
 
   <footer><span>© 2026 Gobierno Autónomo Descentralizado Municipal del cantón Riobamba</span><span>Fuente: Jefatura de Diseño de la Obra Pública</span></footer>
   </div>
+
+
+  <section id="controlView" class="view-panel matrix-page" aria-label="Control eGOB">
+    <div class="matrix-header"><div><h2>Control de trámites eGOB</h2><p>Último movimiento registrado, excluyendo archivo y subrogación. La información es referencial; no determina el responsable ni el estado definitivo del expediente.</p></div>
+      <div class="matrix-actions"><button class="matrix-btn" id="controlRefresh" type="button" hidden>↻ Actualizar tabla</button><span class="connection-badge" id="controlCount" hidden></span></div>
+    </div>
+    <div class="matrix-card control-auth-card" id="controlAuthGate" hidden>
+      <h3>Acceso restringido</h3><p>Inicia sesión con tus credenciales autorizadas para consultar el control de trámites.</p>
+      <div class="control-login-grid">
+        <label class="field-label">Correo electrónico<input class="field-control" id="controlEmail" type="email" autocomplete="username" placeholder="usuario@institucion.gob.ec"></label>
+        <label class="field-label">Contraseña<input class="field-control" id="controlPassword" type="password" autocomplete="current-password"></label>
+        <button class="matrix-btn primary" id="controlLogin" type="button">Ingresar</button>
+      </div><p id="controlLoginMessage" role="status" class="control-message"></p>
+    </div>
+    <div class="matrix-card" id="controlDataPanel" hidden>
+      <div class="matrix-toolbar"><label class="matrix-search-field">Buscar<input id="controlSearch" type="search" placeholder="Nombre, trámite, acción, funcionario…"></label>
+        <label class="field-label">Movimiento<select id="controlActionFilter" class="field-control"><option value="">Todos los movimientos</option></select></label>
+        <label class="field-label">Registros<select id="controlPageSize" class="field-control"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></label>
+      </div>
+      <div class="control-scroll"><table class="control-table"><thead><tr><th>N.º</th><th>Nombre del proyecto</th><th>Trámite eGOB</th><th>Último movimiento</th><th>Fecha del movimiento</th><th>De</th><th>Para</th><th>Dependencia</th><th>Comentario</th><th>Consulta eGOB</th></tr></thead><tbody id="controlTableBody"></tbody></table></div>
+      <div class="control-bottom"><span id="controlSummary"></span><div><button class="matrix-btn" id="controlPrev" type="button">← Anterior</button><span id="controlPageLabel"></span><button class="matrix-btn" id="controlNext" type="button">Siguiente →</button></div></div>
+      <p class="control-hint">Los movimientos se actualizan desde el sincronizador local; esta pestaña no consulta eGOB directamente.</p>
+    </div>
+    <div class="db-message error" id="controlError" hidden></div>
+  </section>
 
   <section id="matrixView" class="view-panel matrix-page">
     <div class="matrix-header">
@@ -5872,6 +5921,7 @@ async function matrixLogout(){
  if(dbClient) await dbClient.auth.signOut();
  currentSession=null;
  pendingProtectedAction=null;
+ ++controlRequest;controlRows=[];await controlGate();
  await syncAuthUI();
 }
 
@@ -5915,6 +5965,102 @@ async function syncAuthUI(){
  renderMatrix();
 }
 
+
+/* V29.10.0 — Control eGOB, acceso con Supabase Auth y RLS */
+let controlRows=[];
+let controlPage=1;
+let controlRequest=0;
+const controlEl=id=>document.getElementById(id);
+function controlText(v){return v===null||v===undefined||String(v).trim()===''?'—':String(v)}
+function controlCell(tr,value,cls=''){
+ const td=document.createElement('td');td.textContent=controlText(value);if(cls)td.className=cls;tr.appendChild(td);return td;
+}
+function controlDate(v){if(!v)return '—';const d=new Date(v);return isNaN(d.getTime())?String(v):new Intl.DateTimeFormat('es-EC',{timeZone:'America/Guayaquil',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(d)}
+function controlError(message){const el=controlEl('controlError');el.hidden=!message;el.textContent=message||''}
+async function controlGate(){
+ const {data}=dbClient?await dbClient.auth.getSession():{data:{session:null}};
+ const allowed=!!data?.session;
+ controlEl('controlAuthGate').hidden=allowed;
+ controlEl('controlDataPanel').hidden=!allowed;
+ controlEl('controlRefresh').hidden=!allowed;
+ controlEl('controlCount').hidden=!allowed;
+ if(!allowed){controlRows=[];controlEl('controlTableBody').replaceChildren();controlError('');}
+ return allowed;
+}
+async function loadControl(){
+ const request=++controlRequest;
+ if(!dbReady||!dbClient){controlError('No hay conexión a Supabase.');return;}
+ if(!await controlGate())return;
+ controlError('');
+ controlEl('controlSummary').textContent='Consultando datos…';
+ try{
+  // La consulta a egob_estado_actual solo puede devolver filas si Supabase RLS lo autoriza.
+  const [proyectos,estados]=await Promise.all([
+   dbClient.from('proyectos').select('id,item,proyecto,tramite').order('item',{ascending:true}),
+   dbClient.from('egob_estado_actual').select('proyecto_id,tramite_origen,tramite_activo,ultimo_movimiento,fecha_ultimo_movimiento,cargo_area,url_egob,error_sincronizacion,asunto,responsable,estado')
+  ]);
+  if(request!==controlRequest)return;
+  if(proyectos.error)throw proyectos.error;
+  if(estados.error)throw estados.error;
+  const byId=new Map((estados.data||[]).map(e=>[String(e.proyecto_id),e]));
+  controlRows=(proyectos.data||[]).map(p=>({p,e:byId.get(String(p.id))||null}));
+  const filter=controlEl('controlActionFilter'),previous=filter.value;
+  const options=[...new Set(controlRows.map(x=>x.e?.ultimo_movimiento).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  filter.replaceChildren(new Option('Todos los movimientos',''));
+  options.forEach(a=>filter.add(new Option(a,a)));
+  if(options.includes(previous))filter.value=previous;
+  controlPage=1;renderControl();
+ }catch(err){if(request!==controlRequest)return;controlError('No fue posible consultar Control eGOB. Comprueba permisos RLS y la existencia de la tabla: '+(err.message||err));controlEl('controlSummary').textContent='Sin datos disponibles';}
+}
+function renderControl(){
+ const q=(controlEl('controlSearch').value||'').trim().toLocaleLowerCase('es');
+ const action=controlEl('controlActionFilter').value;
+ const filtered=controlRows.filter(({p,e})=>{
+  if(action&&(e?.ultimo_movimiento||'')!==action)return false;
+  if(!q)return true;
+  return [p.proyecto,p.tramite,e?.tramite_origen,e?.tramite_activo,e?.ultimo_movimiento,e?.responsable,e?.cargo_area,e?.asunto].some(x=>String(x||'').toLocaleLowerCase('es').includes(q));
+ });
+ const size=Number(controlEl('controlPageSize').value)||25;
+ const pages=Math.max(1,Math.ceil(filtered.length/size));controlPage=Math.min(Math.max(1,controlPage),pages);
+ const body=controlEl('controlTableBody');body.replaceChildren();
+ const subset=filtered.slice((controlPage-1)*size,controlPage*size);
+ for(const {p,e} of subset){
+  const tr=document.createElement('tr');
+  controlCell(tr,p.item??p.id);controlCell(tr,p.proyecto);controlCell(tr,p.tramite);
+  controlCell(tr,e?.ultimo_movimiento,'control-move');controlCell(tr,controlDate(e?.fecha_ultimo_movimiento));
+  // El esquema actual no guarda 'De' ni 'Para' por separado. No se infieren de 'responsable'.
+  controlCell(tr,'—');controlCell(tr,'—');controlCell(tr,e?.cargo_area);controlCell(tr,'—');
+  const linkTd=document.createElement('td');
+  const target=e?.url_egob||(/^\d+$/.test(String(p.tramite||''))?'https://egobedoc.gadmriobamba.gob.ec:8081/issues/'+p.tramite:null);
+  if(target&&/^https:\/\/egobedoc\.gadmriobamba\.gob\.ec(?::8081)?\/issues\//.test(target)){
+   const a=document.createElement('a');a.href=target;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Abrir ↗';linkTd.appendChild(a);
+  }else linkTd.textContent='—';tr.appendChild(linkTd);
+  body.appendChild(tr);
+ }
+ if(!subset.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=10;td.className='control-empty';td.textContent='No se encontraron proyectos con los filtros seleccionados.';tr.appendChild(td);body.appendChild(tr);}
+ controlEl('controlSummary').textContent=`${filtered.length} proyectos · ${subset.length} visibles`;
+ controlEl('controlCount').textContent=`${controlRows.length} proyectos`;
+ controlEl('controlPageLabel').textContent=`Página ${controlPage} de ${pages}`;
+ controlEl('controlPrev').disabled=controlPage<=1;controlEl('controlNext').disabled=controlPage>=pages;
+}
+async function controlLogin(){
+ const email=controlEl('controlEmail').value.trim(),password=controlEl('controlPassword').value;
+ const status=controlEl('controlLoginMessage');status.textContent='Validando credenciales…';
+ if(!dbClient){status.textContent='Sin conexión a Supabase.';return;}
+ const {error}=await dbClient.auth.signInWithPassword({email,password});
+ controlEl('controlPassword').value='';
+ if(error){status.textContent='No se pudo iniciar sesión. Revisa tus credenciales.';return;}
+ status.textContent='';await syncAuthUI();await loadControl();
+}
+function bindControl(){
+ controlEl('controlLogin')?.addEventListener('click',controlLogin);
+ controlEl('controlPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')controlLogin()});
+ controlEl('controlRefresh')?.addEventListener('click',loadControl);
+ for(const id of ['controlSearch','controlActionFilter','controlPageSize'])controlEl(id)?.addEventListener(id==='controlSearch'?'input':'change',()=>{controlPage=1;renderControl()});
+ controlEl('controlPrev')?.addEventListener('click',()=>{controlPage--;renderControl()});
+ controlEl('controlNext')?.addEventListener('click',()=>{controlPage++;renderControl()});
+}
+
 function selectView(viewId){
  document.querySelectorAll(".view-panel").forEach(v=>v.classList.toggle("active",v.id===viewId));
  document.querySelectorAll(".side-tab").forEach(b=>b.classList.toggle("active",b.dataset.view===viewId));
@@ -5922,6 +6068,7 @@ function selectView(viewId){
  if(viewId==="matrixView"){
    syncAuthUI();
  }
+ if(viewId==="controlView")loadControl();
  window.scrollTo({top:0,behavior:"instant"});
 }
 
@@ -5951,6 +6098,7 @@ function saveReportInfo(){
 }
 
 function bindAdminUI(){
+ bindControl();
  document.querySelectorAll(".side-tab").forEach(btn=>{
    btn.addEventListener("click",()=>{
      selectView(btn.dataset.view);
@@ -6117,6 +6265,7 @@ function bindAdminUI(){
    dbClient.auth.onAuthStateChange((_event,session)=>{
      currentSession=session;
      setTimeout(syncAuthUI,0);
+     if(document.getElementById("controlView")?.classList.contains("active")){if(session)loadControl();else{++controlRequest;controlGate();}}
    });
  }
 }
