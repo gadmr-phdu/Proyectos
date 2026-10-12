@@ -5997,7 +5997,7 @@ async function loadControl(){
   // La consulta a egob_estado_actual solo puede devolver filas si Supabase RLS lo autoriza.
   const [proyectos,estados]=await Promise.all([
    dbClient.from('proyectos').select('id,item,proyecto,tramite').order('item',{ascending:true}),
-   dbClient.from('egob_estado_actual').select('proyecto_id,tramite_origen,tramite_activo,ultimo_movimiento,fecha_ultimo_movimiento,cargo_area,url_egob,error_sincronizacion,asunto,responsable,estado')
+   dbClient.from('egob_estado_actual').select('proyecto_id,tramite_origen,tramite_activo,ultimo_movimiento,fecha_ultimo_movimiento,cargo_area,url_egob,error_sincronizacion,asunto,responsable,estado,movimiento_de,movimiento_para,movimiento_comentario,movimiento_dependencia')
   ]);
   if(request!==controlRequest)return;
   if(proyectos.error)throw proyectos.error;
@@ -6012,13 +6012,34 @@ async function loadControl(){
   controlPage=1;renderControl();
  }catch(err){if(request!==controlRequest)return;controlError('No fue posible consultar Control eGOB. Comprueba permisos RLS y la existencia de la tabla: '+(err.message||err));controlEl('controlSummary').textContent='Sin datos disponibles';}
 }
+// Compatibilidad con movimientos guardados antes de incorporar columnas independientes.
+// Solo interpreta etiquetas explícitas; nunca infiere un responsable actual.
+function controlMovimiento(e){
+ const raw=String(e?.ultimo_movimiento||'');
+ const result={accion:raw,de:e?.movimiento_de||'',para:e?.movimiento_para||'',dependencia:e?.movimiento_dependencia||'',comentario:e?.movimiento_comentario||''};
+ if(!raw)return result;
+ const markers=[...raw.matchAll(/\s*\|\s*(De|Para|Area|Área|Comentario)\s*:\s*/gi)];
+ if(!markers.length)return result;
+ result.accion=raw.slice(0,markers[0].index).trim();
+ const values={};
+ for(let i=0;i<markers.length;i++){
+  const m=markers[i],end=i+1<markers.length?markers[i+1].index:raw.length;
+  const key=m[1].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  values[key]=raw.slice(m.index+m[0].length,end).trim();
+ }
+ result.de=result.de||values.de||'';
+ result.para=result.para||values.para||'';
+ result.dependencia=result.dependencia||values.area||'';
+ result.comentario=result.comentario||values.comentario||'';
+ return result;
+}
 function renderControl(){
  const q=(controlEl('controlSearch').value||'').trim().toLocaleLowerCase('es');
  const action=controlEl('controlActionFilter').value;
  const filtered=controlRows.filter(({p,e})=>{
   if(action&&(e?.ultimo_movimiento||'')!==action)return false;
   if(!q)return true;
-  return [p.proyecto,p.tramite,e?.tramite_origen,e?.tramite_activo,e?.ultimo_movimiento,e?.responsable,e?.cargo_area,e?.asunto].some(x=>String(x||'').toLocaleLowerCase('es').includes(q));
+  return [p.proyecto,p.tramite,e?.tramite_origen,e?.tramite_activo,e?.ultimo_movimiento,e?.responsable,e?.cargo_area,e?.asunto,e?.movimiento_de,e?.movimiento_para,e?.movimiento_comentario,e?.movimiento_dependencia].some(x=>String(x||'').toLocaleLowerCase('es').includes(q));
  });
  const size=Number(controlEl('controlPageSize').value)||25;
  const pages=Math.max(1,Math.ceil(filtered.length/size));controlPage=Math.min(Math.max(1,controlPage),pages);
@@ -6027,9 +6048,11 @@ function renderControl(){
  for(const {p,e} of subset){
   const tr=document.createElement('tr');
   controlCell(tr,p.item??p.id);controlCell(tr,p.proyecto);controlCell(tr,p.tramite);
-  controlCell(tr,e?.ultimo_movimiento,'control-move');controlCell(tr,controlDate(e?.fecha_ultimo_movimiento));
-  // El esquema actual no guarda 'De' ni 'Para' por separado. No se infieren de 'responsable'.
-  controlCell(tr,'—');controlCell(tr,'—');controlCell(tr,e?.cargo_area);controlCell(tr,'—');
+  const mov=controlMovimiento(e);
+  controlCell(tr,mov.accion,'control-move');controlCell(tr,controlDate(e?.fecha_ultimo_movimiento));
+  // Prioriza columnas separadas; recupera etiquetas del texto anterior cuando faltan.
+  controlCell(tr,mov.de);controlCell(tr,mov.para);
+  controlCell(tr,mov.dependencia||e?.cargo_area);controlCell(tr,mov.comentario);
   const linkTd=document.createElement('td');
   const target=e?.url_egob||(/^\d+$/.test(String(p.tramite||''))?'https://egobedoc.gadmriobamba.gob.ec:8081/issues/'+p.tramite:null);
   if(target&&/^https:\/\/egobedoc\.gadmriobamba\.gob\.ec(?::8081)?\/issues\//.test(target)){
