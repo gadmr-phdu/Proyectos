@@ -1,0 +1,66 @@
+name: Sincronizar eGOB con Supabase
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'  # UTC: cada 30 minutos, ejecución aproximada
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'Simulación o guardado'
+        required: true
+        type: choice
+        default: simulacion
+        options:
+          - simulacion
+          - guardado
+
+permissions:
+  contents: read
+
+concurrency:
+  group: egob-sincronizacion
+  cancel-in-progress: false
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      EGOB_USERNAME: ${{ secrets.EGOB_USERNAME }}
+      EGOB_PASSWORD: ${{ secrets.EGOB_PASSWORD }}
+      EGOB_SYNC_AUTORIZADO: 'SI'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r automatizacion-egob/requirements.txt
+      - name: Comprobar secretos
+        shell: bash
+        run: |
+          for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY EGOB_USERNAME EGOB_PASSWORD; do
+            if [[ -z "${!name}" ]]; then echo "Falta el secreto $name"; exit 1; fi
+          done
+      - name: Ejecutar sincronización
+        working-directory: automatizacion-egob
+        shell: bash
+        run: |
+          set -o pipefail
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.modo }}" == "guardado" ]]; then
+            python sincronizar_egob_fase_2_2_4.py --guardar --sin-interaccion --pausa 0.7
+          else
+            python sincronizar_egob_fase_2_2_4.py --limite 3 --pausa 0.7
+          fi
+      - name: Guardar reporte CSV
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-egob-${{ github.run_id }}
+          path: automatizacion-egob/resultado_fase_2_2_4_*.csv
+          if-no-files-found: ignore
+          retention-days: 7
